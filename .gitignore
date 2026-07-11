@@ -1,0 +1,33 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.keystore
+auth.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.coverage
+
+# Node
+node_modules/
+dist/
+
+# Editors and OS
+.DS_Store
+.idea/
+.vscode/
+
+# Local outputs
+reports/
+logs/
+*.log
+.tmp/
+tmp/
