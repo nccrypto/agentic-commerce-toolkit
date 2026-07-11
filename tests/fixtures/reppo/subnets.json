@@ -1,0 +1,10 @@
+{
+  "data": {
+    "subnets": [
+      {
+        "id": "synthetic-subnet-1",
+        "subnetName": "Synthetic Text Datanet"
+      }
+    ]
+  }
+}

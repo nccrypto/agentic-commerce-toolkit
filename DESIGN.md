@@ -60,7 +60,7 @@ Boundary checks are required in CI. Automated checks are a backstop, not a subst
 
 ## First implementation target
 
-A read-only Reppo ecosystem inspector that:
+The v0.1.0 read-only Reppo ecosystem inspector:
 
 - reads public endpoints only;
 - emits stable JSON;
@@ -68,3 +68,15 @@ A read-only Reppo ecosystem inspector that:
 - records source URLs and timestamps;
 - never requests a private key;
 - complements rather than reimplements the official Reppo CLI.
+
+### D6. Preserve upstream data inside a stable envelope
+
+The inspector owns only the top-level envelope, source metadata, error codes, and aggregate command keys. Successful public API objects remain unchanged under `data`, avoiding a second field vocabulary that could drift from upstream. Status and snapshot probe each source independently and keep successful objects when another source fails.
+
+### D7. Standard-library HTTP with deterministic seams
+
+Runtime networking uses `urllib` with a fixed user agent, JSON accept header, refused redirects, bounded timeout, URL encoding, and an 8 MiB response limit. The cap accommodates the current public pod catalog while still failing closed on unbounded growth. The inspector accepts injected transport and clock implementations so tests are deterministic and do not contact live services.
+
+### D8. Defend against upstream pagination and availability drift
+
+The public pod catalog currently returns the full catalog even when a smaller `limit` is requested. The inspector therefore validates `data.subnets` and `data.pods`, downloads only within the hard response cap, and slices returned collections to the caller's requested limit. The documented public stats route currently returns HTTP 404; aggregate commands preserve successful catalog data and mark the result partial rather than inventing replacement metrics.

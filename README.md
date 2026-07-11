@@ -2,7 +2,7 @@
 
 Open-source tools, adapters, schemas, and operational patterns for agent-native commerce, starting with Reppo and Virtuals ACP.
 
-> **Status:** Public-foundation scaffold. The first executable integration is planned but not yet released.
+> **Status:** v0.1.0 includes the Reppo read-only ecosystem inspector.
 
 ## Mission
 
@@ -34,7 +34,7 @@ Public contributions must be independently reviewable from public sources or int
 ## Initial roadmap
 
 1. **Public foundation** — governance, security, CI, and boundary checks.
-2. **Reppo read-only inspector** — public API/RPC discovery and diagnostics with stable JSON.
+2. **Reppo read-only inspector** — public API discovery and diagnostics with stable JSON.
 3. **Provenance schemas** — source manifests and structured agent-job results.
 4. **Virtuals ACP reference integration** — a bounded, observable example service.
 5. **Community validation** — upstream feedback, external users, and a documented inference-sponsorship decision.
@@ -56,18 +56,37 @@ agentic-commerce-toolkit/
 ├── examples/
 ├── schemas/
 ├── scripts/
+├── src/agentic_commerce/
 ├── tests/
 └── .github/workflows/
 ```
 
 ## Development
 
-The current boundary checker uses only Python's standard library:
+Python 3.11 or newer is required. Install the console script in an isolated environment and inspect the public Reppo ecosystem:
 
 ```bash
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install -e .
+agentic-commerce reppo status --pretty
+agentic-commerce reppo datanets --limit 20
+agentic-commerce reppo pods --limit 20
+agentic-commerce reppo snapshot --limit 10 --pretty
+```
+
+Runtime code uses only Python's standard library. Development verification is also dependency-free:
+
+```bash
+python3 -m compileall -q src scripts tests
 python3 scripts/check_public_boundary.py .
 python3 -m unittest discover -s tests -v
+python3 -c 'import json; json.load(open("schemas/inspector-envelope-v1.schema.json", encoding="utf-8"))'
 ```
+
+See [docs/reppo-inspector.md](docs/reppo-inspector.md) for the JSON contract, exit codes, endpoint boundary, and failure behavior.
+
+At the 2026-07-11 compatibility check, the datanet and pod catalogs were live. The documented public stats route returned HTTP 404, so `status` and `snapshot` correctly returned partial result code `2` while preserving catalog data. The upstream pods route also ignored its requested page size; the client applies the requested limit after a capped download.
 
 ## Project status and affiliation
 

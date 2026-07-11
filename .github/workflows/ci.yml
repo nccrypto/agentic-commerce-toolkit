@@ -15,7 +15,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Check public boundary
-        run: python3 scripts/check_public_boundary.py .
+      - name: Compile Python
+        run: python3 -m compileall -q src scripts tests
       - name: Run tests
         run: python3 -m unittest discover -s tests -v
+      - name: Validate JSON schema syntax
+        run: python3 -c 'import json; json.load(open("schemas/inspector-envelope-v1.schema.json", encoding="utf-8"))'
+      - name: Check public boundary
+        run: python3 scripts/check_public_boundary.py .
+      - name: Check local CLI help
+        run: PYTHONPATH=src python3 -m agentic_commerce --help >/dev/null

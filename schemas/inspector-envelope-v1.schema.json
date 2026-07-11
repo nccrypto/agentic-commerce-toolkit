@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/nccrypto/agentic-commerce-toolkit/main/schemas/inspector-envelope-v1.schema.json",
+  "title": "Agentic Commerce Inspector Envelope v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "command",
+    "generatedAt",
+    "ok",
+    "partial",
+    "sources",
+    "data",
+    "errors"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "1.0"},
+    "command": {
+      "enum": ["reppo status", "reppo datanets", "reppo pods", "reppo snapshot"]
+    },
+    "generatedAt": {"type": "string", "format": "date-time"},
+    "ok": {"type": "boolean"},
+    "partial": {"type": "boolean"},
+    "sources": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/source"}
+    },
+    "data": {
+      "oneOf": [
+        {"type": "object"},
+        {"type": "null"}
+      ]
+    },
+    "errors": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/error"}
+    }
+  },
+  "$defs": {
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message"],
+      "properties": {
+        "code": {
+          "enum": [
+            "VALIDATION_ERROR",
+            "HTTP_ERROR",
+            "NETWORK_ERROR",
+            "TIMEOUT",
+            "RESPONSE_TOO_LARGE",
+            "INVALID_JSON",
+            "INVALID_SHAPE"
+          ]
+        },
+        "message": {"type": "string"}
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["url", "httpStatus", "latencyMs", "fetchedAt", "error"],
+      "properties": {
+        "url": {"type": "string", "format": "uri"},
+        "httpStatus": {
+          "oneOf": [
+            {"type": "integer", "minimum": 100, "maximum": 599},
+            {"type": "null"}
+          ]
+        },
+        "latencyMs": {
+          "oneOf": [
+            {"type": "integer", "minimum": 0},
+            {"type": "null"}
+          ]
+        },
+        "fetchedAt": {
+          "oneOf": [
+            {"type": "string", "format": "date-time"},
+            {"type": "null"}
+          ]
+        },
+        "error": {
+          "oneOf": [
+            {"$ref": "#/$defs/error"},
+            {"type": "null"}
+          ]
+        }
+      }
+    }
+  }
+}

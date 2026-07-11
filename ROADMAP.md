@@ -10,21 +10,21 @@ A phase is complete only when its artifacts are exercised and its verification g
 - [x] Public/private boundary policy
 - [x] Security and contribution policies
 - [x] Deterministic boundary checker and tests
-- [ ] Public GitHub remote created after explicit approval
-- [ ] Branch protection and required CI configured
+- [x] Public GitHub remote created after explicit approval
+- [x] Branch protection and required CI configured
 
 **Gate:** clean boundary scan, tests pass, no remote dependency on a private project.
 
 ## Phase 1 — Reppo read-only inspector (`v0.1.0`)
 
-- [ ] Confirm supported public endpoints against current official documentation
-- [ ] Define normalized status and provenance schemas
-- [ ] Implement datanet, pod, epoch, and endpoint-health inspection
-- [ ] Add fixtures and contract tests
-- [ ] Document differences from the official Reppo CLI
-- [ ] Publish a reproducible demo
+- [x] Bound the implementation to the specified public `/stats`, `/public/subnets`, and `/public/pods` endpoints
+- [x] Define a stable inspection envelope and source metadata schema
+- [x] Implement datanet and pod listing, pod epoch filtering, endpoint status, and snapshot inspection
+- [x] Add synthetic fixtures and deterministic contract tests
+- [x] Document differences from an official Reppo CLI
+- [x] Publish a reproducible offline example
 
-**Gate:** clean install, public-source-only fixtures, stable JSON, no private key required.
+**Gate:** implemented with standard-library runtime code, public-shaped synthetic fixtures, stable JSON, no authentication support, network-free CI tests, and a live compatibility check that preserves partial data when an upstream source is unavailable.
 
 ## Phase 2 — Provenance and safety (`v0.2.0`)
 

@@ -1,0 +1,11 @@
+{
+  "data": {
+    "pods": [
+      {
+        "id": "synthetic-pod-1",
+        "privateSubnetId": "synthetic-subnet-1",
+        "podValidityEpoch": 12
+      }
+    ]
+  }
+}
