@@ -38,9 +38,9 @@ public protocol sources
 
 ## Decisions
 
-### D1. Standalone repository, not part of the private Hermes monorepo
+### D1. Standalone repository
 
-The toolkit may be developed with private local tools, but its committed history and artifacts must stand on their own. No private repo is a runtime or documentation prerequisite.
+The toolkit may be developed with private local tools, but its committed history and artifacts must stand on their own. No non-public source is required at runtime or for documentation.
 
 ### D2. Reppo first, Virtuals ACP second
 

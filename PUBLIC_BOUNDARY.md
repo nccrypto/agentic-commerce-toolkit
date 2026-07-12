@@ -18,10 +18,9 @@ The repository is intentionally separated from private research, runtime, invest
 ## Prohibited
 
 - `.env`, auth stores, private keys, seed phrases, API tokens, cookies, session files
-- Wallet holdings, private addresses, transactions, budgets, or strategy unless intentionally disclosed
-- Hermes memories, sessions, profile configuration, `SOUL.md`, cron state, or generated reports
-- Reppo Helper briefs, local databases, watchlists, or unpublished interpretations
-- CNC strategy, queues, drafts, analytics, or private source material
+- Private account, wallet, transaction, budget, or strategy data unless intentionally disclosed
+- Local runtime state, including memories, sessions, profile configuration, schedules, or generated reports
+- Non-public research, local databases, watchlists, content queues, drafts, analytics, or unpublished interpretations
 - Private DMs, partner communications, grant terms, or contact details
 - Absolute local paths that expose private project structure
 - Trading positions, proprietary signals, or investment recommendations
@@ -40,4 +39,4 @@ When an internal need inspires a public contribution:
 
 ## Enforcement
 
-The boundary checker blocks known secret filenames, private-project references, sensitive key patterns, and local absolute paths. It can produce false positives and cannot prove that content is safe. Human review remains mandatory.
+The boundary checker blocks known secret filenames, unapproved hidden or private directories, explicit named non-public system references, sensitive key patterns, and local absolute paths. Maintainers can supply an uncommitted comma-separated identifier denylist through `PUBLIC_BOUNDARY_PRIVATE_TERMS`; findings do not echo those values. Trusted pre-merge and push CI supply this denylist from a GitHub secret, while pull-request code never receives or executes with it. The checker can produce false positives and cannot prove that content is safe. Human review remains mandatory.

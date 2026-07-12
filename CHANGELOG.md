@@ -6,6 +6,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Security
+
+- Generalize public-boundary policy and scanner rules so documentation does not enumerate non-public system identifiers.
+- Scan public policy documents for sensitive patterns instead of exempting them from boundary checks.
+
 ## [0.1.0] - 2026-07-12
 
 ### Added
