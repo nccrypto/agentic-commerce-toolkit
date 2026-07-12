@@ -15,6 +15,8 @@ For a deterministic offline demonstration, run the unit tests. They inject synth
 python3 -m unittest discover -s tests -v
 ```
 
+[`datanets-envelope-v1.example.json`](datanets-envelope-v1.example.json) is a synthetic instance of the published inspector-envelope schema. The schema contract test validates this fixture with a development-only JSON Schema dependency.
+
 Consumers should check `ok`, `partial`, and the process exit code before reading `data`. A partial snapshot keeps successful upstream objects and records the failed public source in both `sources` and `errors`.
 
 The documented public stats route returned HTTP 404 during the 2026-07-11 compatibility check, so a live snapshot may validly return exit code `2` while still containing datanet and pod data.

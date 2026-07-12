@@ -2,26 +2,68 @@ name: CI
 
 on:
   push:
+    branches: [main]
   pull_request:
 
 permissions:
   contents: read
 
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.11"
+      - name: Check public boundary
+        run: python3 scripts/check_public_boundary.py .
+      - name: Install development tools
+        run: python3 -m pip install --disable-pip-version-check -e '.[dev]'
       - name: Compile Python
         run: python3 -m compileall -q src scripts tests
       - name: Run tests
-        run: python3 -m unittest discover -s tests -v
-      - name: Validate JSON schema syntax
-        run: python3 -c 'import json; json.load(open("schemas/inspector-envelope-v1.schema.json", encoding="utf-8"))'
-      - name: Check public boundary
-        run: python3 scripts/check_public_boundary.py .
-      - name: Check local CLI help
-        run: PYTHONPATH=src python3 -m agentic_commerce --help >/dev/null
+        run: python3 -B -m unittest discover -s tests -v
+      - name: Check installed CLI help
+        run: agentic-commerce --help >/dev/null
+
+  package:
+    name: Package (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.14"]
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Build wheel and source distribution
+        run: |
+          python -m pip install --disable-pip-version-check 'build==1.5.1' 'jsonschema==4.26.0'
+          python -m build --outdir "$RUNNER_TEMP/dist"
+          wheels=("$RUNNER_TEMP"/dist/*.whl)
+          sdists=("$RUNNER_TEMP"/dist/*.tar.gz)
+          test -f "${wheels[0]}"
+          test -f "${sdists[0]}"
+      - name: Test extracted source distribution
+        run: |
+          sdists=("$RUNNER_TEMP"/dist/*.tar.gz)
+          mkdir "$RUNNER_TEMP/sdist"
+          tar -xzf "${sdists[0]}" -C "$RUNNER_TEMP/sdist"
+          roots=("$RUNNER_TEMP"/sdist/*)
+          cd "${roots[0]}"
+          python scripts/check_public_boundary.py .
+          PYTHONPATH=src python -B -m unittest discover -s tests -v
+      - name: Install and smoke-test wheel outside checkout
+        run: |
+          python -m venv "$RUNNER_TEMP/install"
+          "$RUNNER_TEMP/install/bin/python" -m pip install --disable-pip-version-check --no-deps "$RUNNER_TEMP"/dist/*.whl
+          cd "$RUNNER_TEMP"
+          "$RUNNER_TEMP/install/bin/agentic-commerce" --help >/dev/null

@@ -68,6 +68,49 @@ class ReppoInspectorTests(unittest.TestCase):
         self.assertEqual(result.envelope["sources"], [])
         self.assertEqual(result.envelope["errors"][0]["code"], "VALIDATION_ERROR")
 
+    def test_datanets_rejects_limit_above_public_output_cap(self):
+        transport = FakeTransport(
+            [
+                TransportResponse(
+                    200,
+                    b'{"data": {"subnets": []}}',
+                    1,
+                    "2026-01-02T03:04:05Z",
+                )
+            ]
+        )
+        inspector = Inspector(transport=transport, clock=lambda: "2026-01-02T03:04:06Z")
+
+        result = inspector.datanets(limit=101)
+
+        self.assertEqual(transport.calls, [])
+        self.assertEqual(result.exit_code, 1)
+        self.assertEqual(
+            result.envelope["errors"][0]["message"],
+            "limit must be between 1 and 100",
+        )
+
+    def test_datanets_rejects_oversized_search_before_transport(self):
+        transport = FakeTransport(
+            [
+                TransportResponse(
+                    200,
+                    b'{"data": {"subnets": []}}',
+                    1,
+                    "2026-01-02T03:04:05Z",
+                )
+            ]
+        )
+        inspector = Inspector(transport=transport, clock=lambda: "2026-01-02T03:04:06Z")
+
+        result = inspector.datanets(search="x" * 257)
+
+        self.assertEqual(transport.calls, [])
+        self.assertEqual(
+            result.envelope["errors"][0]["message"],
+            "search must be at most 256 characters",
+        )
+
     def test_http_error_is_structured_and_retains_source_metadata(self):
         transport = FakeTransport(
             [TransportResponse(503, b'{"detail": "upstream unavailable"}', 31, "2026-01-02T03:04:05Z")]
@@ -154,6 +197,70 @@ class ReppoInspectorTests(unittest.TestCase):
         self.assertEqual(transport.calls, [])
         self.assertEqual(result.envelope["errors"][0]["code"], "VALIDATION_ERROR")
 
+    def test_pods_rejects_limit_above_public_output_cap(self):
+        transport = FakeTransport(
+            [
+                TransportResponse(
+                    200,
+                    b'{"data": {"pods": []}}',
+                    1,
+                    "2026-01-02T03:04:05Z",
+                )
+            ]
+        )
+        inspector = Inspector(transport=transport, clock=lambda: "2026-01-02T03:04:06Z")
+
+        result = inspector.pods(limit=101)
+
+        self.assertEqual(transport.calls, [])
+        self.assertEqual(result.exit_code, 1)
+        self.assertEqual(
+            result.envelope["errors"][0]["message"],
+            "limit must be between 1 and 100",
+        )
+
+    def test_pods_rejects_oversized_search_before_transport(self):
+        transport = FakeTransport(
+            [
+                TransportResponse(
+                    200,
+                    b'{"data": {"pods": []}}',
+                    1,
+                    "2026-01-02T03:04:05Z",
+                )
+            ]
+        )
+        inspector = Inspector(transport=transport, clock=lambda: "2026-01-02T03:04:06Z")
+
+        result = inspector.pods(search="x" * 257)
+
+        self.assertEqual(transport.calls, [])
+        self.assertEqual(
+            result.envelope["errors"][0]["message"],
+            "search must be at most 256 characters",
+        )
+
+    def test_pods_rejects_oversized_datanet_filter_before_transport(self):
+        transport = FakeTransport(
+            [
+                TransportResponse(
+                    200,
+                    b'{"data": {"pods": []}}',
+                    1,
+                    "2026-01-02T03:04:05Z",
+                )
+            ]
+        )
+        inspector = Inspector(transport=transport, clock=lambda: "2026-01-02T03:04:06Z")
+
+        result = inspector.pods(datanet="x" * 257)
+
+        self.assertEqual(transport.calls, [])
+        self.assertEqual(
+            result.envelope["errors"][0]["message"],
+            "datanet must be at most 256 characters",
+        )
+
     def test_status_reports_three_public_probes_independently(self):
         transport = FakeTransport(
             [
@@ -227,6 +334,25 @@ class ReppoInspectorTests(unittest.TestCase):
         self.assertEqual(result.exit_code, 1)
         self.assertEqual(result.envelope["errors"][0]["code"], "VALIDATION_ERROR")
 
+    def test_snapshot_rejects_limit_above_public_output_cap(self):
+        transport = FakeTransport(
+            [
+                TransportResponse(200, b'{"data": {}}', 1, "2026-01-02T03:04:01Z"),
+                TransportResponse(200, b'{"data": {"subnets": []}}', 1, "2026-01-02T03:04:02Z"),
+                TransportResponse(200, b'{"data": {"pods": []}}', 1, "2026-01-02T03:04:03Z"),
+            ]
+        )
+        inspector = Inspector(transport=transport, clock=lambda: "2026-01-02T03:04:06Z")
+
+        result = inspector.snapshot(limit=101)
+
+        self.assertEqual(transport.calls, [])
+        self.assertEqual(result.exit_code, 1)
+        self.assertEqual(
+            result.envelope["errors"][0]["message"],
+            "limit must be between 1 and 100",
+        )
+
     def test_response_size_error_is_a_secret_safe_source_failure(self):
         transport = RaisingTransport(ResponseTooLarge())
         inspector = Inspector(transport=transport, clock=lambda: "2026-01-02T03:04:06Z")
@@ -259,6 +385,33 @@ class ReppoInspectorTests(unittest.TestCase):
         self.assertEqual(transport.calls, [])
         self.assertEqual(result.envelope["errors"][0]["code"], "VALIDATION_ERROR")
         self.assertNotIn("secret", str(result.envelope))
+
+    def test_custom_base_url_is_rejected_before_transport(self):
+        transport = FakeTransport(
+            [
+                TransportResponse(
+                    200,
+                    b'{"data": {"subnets": []}}',
+                    1,
+                    "2026-01-02T03:04:05Z",
+                )
+            ]
+        )
+        inspector = Inspector(
+            base_url="https://mirror.example/api/v1",
+            transport=transport,
+            clock=lambda: "2026-01-02T03:04:06Z",
+        )
+
+        result = inspector.datanets()
+
+        self.assertEqual(transport.calls, [])
+        self.assertEqual(result.exit_code, 1)
+        self.assertEqual(result.envelope["errors"][0]["code"], "VALIDATION_ERROR")
+        self.assertEqual(
+            result.envelope["errors"][0]["message"],
+            "base URL must match the canonical Reppo public API",
+        )
 
     def test_malformed_base_url_is_rejected_before_transport(self):
         for base_url in ("http://[", "http://example.test:abc/api/v1"):

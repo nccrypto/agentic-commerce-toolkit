@@ -73,9 +73,9 @@ The v0.1.0 read-only Reppo ecosystem inspector:
 
 The inspector owns only the top-level envelope, source metadata, error codes, and aggregate command keys. Successful public API objects remain unchanged under `data`, avoiding a second field vocabulary that could drift from upstream. Status and snapshot probe each source independently and keep successful objects when another source fails.
 
-### D7. Standard-library HTTP with deterministic seams
+### D7. Canonical standard-library HTTP with deterministic seams
 
-Runtime networking uses `urllib` with a fixed user agent, JSON accept header, refused redirects, bounded timeout, URL encoding, and an 8 MiB response limit. The cap accommodates the current public pod catalog while still failing closed on unbounded growth. The inspector accepts injected transport and clock implementations so tests are deterministic and do not contact live services.
+Runtime networking is pinned to the canonical Reppo public API and uses `urllib` with a fixed user agent, JSON accept header, refused redirects, bounded timeout, URL encoding, and an 8 MiB response limit. The cap accommodates the current public pod catalog while still failing closed on unbounded growth. Public result limits and query lengths are bounded. The inspector accepts injected transport and clock implementations so tests are deterministic and do not contact live services or arbitrary custom hosts.
 
 ### D8. Defend against upstream pagination and availability drift
 
