@@ -86,6 +86,8 @@ python3 -c 'import json; json.load(open("schemas/inspector-envelope-v1.schema.js
 
 See [docs/reppo-inspector.md](docs/reppo-inspector.md) for the JSON contract, exit codes, endpoint boundary, and failure behavior.
 
+For silent compatibility drift detection and bounded weekly project evidence, see [docs/automation.md](docs/automation.md). These helpers are read-only and never perform GitHub mutations.
+
 At the 2026-07-11 compatibility check, the datanet and pod catalogs were live. The documented public stats route returned HTTP 404, so `status` and `snapshot` correctly returned partial result code `2` while preserving catalog data. The upstream pods route also ignored its requested page size; the client applies the requested limit after a capped download.
 
 ## Project status and affiliation
