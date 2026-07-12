@@ -18,6 +18,7 @@ A phase is complete only when its artifacts are exercised and its verification g
 ## Phase 1 — Reppo read-only inspector (`v0.1.0`)
 
 - [x] Bound the implementation to the specified public `/stats`, `/public/subnets`, and `/public/pods` endpoints
+- [x] Pin runtime transport to the canonical Reppo host and bound public inputs
 - [x] Define a stable inspection envelope and source metadata schema
 - [x] Implement datanet and pod listing, pod epoch filtering, endpoint status, and snapshot inspection
 - [x] Add synthetic fixtures and deterministic contract tests

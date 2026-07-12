@@ -9,13 +9,15 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Callable, Protocol
 from urllib.error import HTTPError
-from urllib.parse import urlencode, urlsplit
+from urllib.parse import urlencode
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 
 DEFAULT_BASE_URL = "https://reppo.ai/api/v1"
 SCHEMA_VERSION = "1.0"
 DEFAULT_MAX_RESPONSE_BYTES = 8_388_608
+MAX_RESULT_LIMIT = 100
+MAX_QUERY_LENGTH = 256
 USER_AGENT = "agentic-commerce-toolkit/0.1.0"
 
 
@@ -102,23 +104,7 @@ class Inspector:
         self.timeout = timeout
         self.transport = transport
         self.clock = clock
-        try:
-            parsed_base = urlsplit(self.base_url)
-            hostname = parsed_base.hostname
-            parsed_base.port
-        except ValueError:
-            self._base_url_valid = False
-        else:
-            self._base_url_valid = (
-                parsed_base.scheme in {"http", "https"}
-                and bool(parsed_base.netloc)
-                and bool(hostname)
-                and parsed_base.username is None
-                and parsed_base.password is None
-                and not parsed_base.query
-                and not parsed_base.fragment
-                and not any(character.isspace() for character in parsed_base.netloc)
-            )
+        self._base_url_valid = self.base_url == DEFAULT_BASE_URL
 
     def _envelope(
         self,
@@ -150,7 +136,7 @@ class Inspector:
     def _preflight(self, command: str) -> InspectionResult | None:
         if not self._base_url_valid:
             return self._validation_failure(
-                command, "base URL must be an HTTP(S) URL without credentials or query data"
+                command, "base URL must match the canonical Reppo public API"
             )
         if not math.isfinite(self.timeout) or self.timeout <= 0:
             return self._validation_failure(command, "timeout must be finite and positive")
@@ -238,9 +224,17 @@ class Inspector:
     def datanets(self, *, page: int = 1, limit: int = 20, search: str = "") -> InspectionResult:
         if failure := self._preflight("reppo datanets"):
             return failure
-        if page <= 0 or limit <= 0:
+        if page <= 0:
             return self._validation_failure(
-                "reppo datanets", "page and limit must be positive integers"
+                "reppo datanets", "page must be a positive integer"
+            )
+        if not 1 <= limit <= MAX_RESULT_LIMIT:
+            return self._validation_failure(
+                "reppo datanets", "limit must be between 1 and 100"
+            )
+        if len(search) > MAX_QUERY_LENGTH:
+            return self._validation_failure(
+                "reppo datanets", "search must be at most 256 characters"
             )
         query = urlencode({"page": page, "limit": limit, "search": search})
         url = f"{self.base_url}/public/subnets?{query}"
@@ -267,9 +261,21 @@ class Inspector:
     ) -> InspectionResult:
         if failure := self._preflight("reppo pods"):
             return failure
-        if page <= 0 or limit <= 0:
+        if page <= 0:
             return self._validation_failure(
-                "reppo pods", "page and limit must be positive integers"
+                "reppo pods", "page must be a positive integer"
+            )
+        if not 1 <= limit <= MAX_RESULT_LIMIT:
+            return self._validation_failure(
+                "reppo pods", "limit must be between 1 and 100"
+            )
+        if len(search) > MAX_QUERY_LENGTH:
+            return self._validation_failure(
+                "reppo pods", "search must be at most 256 characters"
+            )
+        if datanet is not None and len(datanet) > MAX_QUERY_LENGTH:
+            return self._validation_failure(
+                "reppo pods", "datanet must be at most 256 characters"
             )
         if epoch is not None and epoch < 0:
             return self._validation_failure(
@@ -327,9 +333,9 @@ class Inspector:
     def snapshot(self, *, limit: int = 20) -> InspectionResult:
         if failure := self._preflight("reppo snapshot"):
             return failure
-        if limit <= 0:
+        if not 1 <= limit <= MAX_RESULT_LIMIT:
             return self._validation_failure(
-                "reppo snapshot", "limit must be a positive integer"
+                "reppo snapshot", "limit must be between 1 and 100"
             )
         urls = {
             "stats": f"{self.base_url}/stats",

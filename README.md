@@ -2,7 +2,7 @@
 
 Open-source tools, adapters, schemas, and operational patterns for agent-native commerce, starting with Reppo and Virtuals ACP.
 
-> **Status:** v0.1.0 includes the Reppo read-only ecosystem inspector.
+> **Status:** v0.1.0 release candidate with a read-only Reppo ecosystem inspector.
 
 ## Mission
 
@@ -75,16 +75,17 @@ agentic-commerce reppo pods --limit 20
 agentic-commerce reppo snapshot --limit 10 --pretty
 ```
 
-Runtime code uses only Python's standard library. Development verification is also dependency-free:
+Runtime code uses only Python's standard library. Install the development-only schema and build tools before running the complete verification suite:
 
 ```bash
+python -m pip install -e '.[dev]'
 python3 -m compileall -q src scripts tests
 python3 scripts/check_public_boundary.py .
 python3 -m unittest discover -s tests -v
-python3 -c 'import json; json.load(open("schemas/inspector-envelope-v1.schema.json", encoding="utf-8"))'
+python3 -m build
 ```
 
-See [docs/reppo-inspector.md](docs/reppo-inspector.md) for the JSON contract, exit codes, endpoint boundary, and failure behavior.
+See [docs/reppo-inspector.md](docs/reppo-inspector.md) for the JSON contract, canonical-host policy, input limits, exit codes, endpoint boundary, and failure behavior. Release maintainers should follow [docs/releasing.md](docs/releasing.md).
 
 For silent compatibility drift detection and bounded weekly project evidence, see [docs/automation.md](docs/automation.md). These helpers are read-only and never perform GitHub mutations.
 

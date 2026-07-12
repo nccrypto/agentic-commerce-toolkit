@@ -31,4 +31,9 @@ Read-only integrations are preferred. Any future write-capable integration must 
 
 ## Supported versions
 
-Until the first tagged release, only the latest `main` branch is evaluated. This statement will be replaced with a version-support table at `v0.1.0`.
+| Version | Supported |
+| --- | --- |
+| `0.1.x` | Yes |
+| `< 0.1` | No |
+
+Security fixes are applied to the latest patch release in the supported minor line. The `main` branch may contain unreleased changes and is not a substitute for a tagged release.

@@ -6,7 +6,7 @@ Version 0.1.0 inspects only these unauthenticated public GET endpoints:
 - `GET /public/subnets?page=&limit=&search=`
 - `GET /public/pods?page=&limit=&search=&filters[currentEpoch]=&filters[subnet]=`
 
-The default API base is `https://reppo.ai/api/v1`. `--base-url` supports a public-compatible mirror or local test server; URLs containing credentials, query strings, or fragments are rejected.
+The only accepted API base is `https://reppo.ai/api/v1`. The compatibility `--base-url` option accepts that exact value only; all alternate hosts fail validation before transport. Tests use injected transports instead of opening arbitrary network targets.
 
 ## Install and run
 
@@ -32,7 +32,7 @@ All successful command execution and handled failures write one JSON document to
 
 ## Safety and failure behavior
 
-The client sends an explicit user agent and `Accept: application/json`, refuses redirects to other routes, applies a bounded timeout and an 8 MiB response cap, and validates JSON response shape. Page, limit, and timeout must be positive; epoch must be nonnegative. Errors use fixed codes and generic messages so exception details and response bodies do not leak into output.
+The client sends an explicit user agent and `Accept: application/json`, refuses redirects to other routes, applies a bounded timeout and an 8 MiB response cap, and validates JSON response shape. Page and timeout must be positive; `limit` must be between 1 and 100; search and datanet filters may contain at most 256 characters; epoch must be nonnegative. Errors use fixed codes and generic messages so exception details and response bodies do not leak into output.
 
 The inspector validates the documented `data.subnets` and `data.pods` arrays. Because the public pods route ignored `limit` during the 2026-07-11 compatibility check, the inspector also slices a successfully parsed collection to the requested limit before writing JSON. The transport cap remains authoritative: if the upstream catalog grows beyond 8 MiB, the request fails with `RESPONSE_TOO_LARGE` instead of consuming unbounded memory.
 

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "1.0",
+  "command": "reppo datanets",
+  "generatedAt": "2026-01-02T03:04:06Z",
+  "ok": true,
+  "partial": false,
+  "sources": [
+    {
+      "url": "https://reppo.ai/api/v1/public/subnets?page=1&limit=20&search=",
+      "httpStatus": 200,
+      "latencyMs": 12,
+      "fetchedAt": "2026-01-02T03:04:05Z",
+      "error": null
+    }
+  ],
+  "data": {
+    "data": {
+      "subnets": []
+    }
+  },
+  "errors": []
+}
