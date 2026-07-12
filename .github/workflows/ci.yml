@@ -22,6 +22,13 @@ jobs:
           python-version: "3.11"
       - name: Check public boundary
         run: python3 scripts/check_public_boundary.py .
+      - name: Check private identifier boundary
+        if: github.event_name == 'push'
+        env:
+          PUBLIC_BOUNDARY_PRIVATE_TERMS: ${{ secrets.PUBLIC_BOUNDARY_PRIVATE_TERMS }}
+        run: |
+          test -n "$PUBLIC_BOUNDARY_PRIVATE_TERMS"
+          python3 scripts/check_public_boundary.py .
       - name: Install development tools
         run: python3 -m pip install --disable-pip-version-check -e '.[dev]'
       - name: Compile Python

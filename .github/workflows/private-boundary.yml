@@ -1,0 +1,33 @@
+name: Private boundary
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  private-boundary:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out trusted scanner
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          path: trusted
+          persist-credentials: false
+      - name: Check out candidate files without credentials
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: candidate
+          persist-credentials: false
+      - name: Scan candidate with trusted rules
+        env:
+          PUBLIC_BOUNDARY_PRIVATE_TERMS: ${{ secrets.PUBLIC_BOUNDARY_PRIVATE_TERMS }}
+        run: |
+          test -n "$PUBLIC_BOUNDARY_PRIVATE_TERMS"
+          python3 trusted/scripts/check_public_boundary.py candidate

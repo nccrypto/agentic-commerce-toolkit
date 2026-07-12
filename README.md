@@ -19,15 +19,7 @@ Every shipped artifact should do at least one of the following:
 
 ## Independence and public boundary
 
-This is a **standalone public project**. It is not a mirror of any private research, content, investment, wallet, or Hermes runtime repository.
-
-Specifically, it must not import or publish private material from:
-
-- Hermes Guardian or the wider private Hermes agent fleet;
-- Reppo Helper research briefs and local operating state;
-- CNC strategy, content queues, or unpublished drafts;
-- private wallet, inference, trading, or partner data;
-- local agent memories, sessions, credentials, logs, or generated reports.
+This is a **standalone public project**, not a mirror of or index to any non-public system. It must not depend on or disclose private repositories, local runtime state, unpublished research or content, account data, internal communications, or operational records.
 
 Public contributions must be independently reviewable from public sources or intentionally created for this repository. See [PUBLIC_BOUNDARY.md](PUBLIC_BOUNDARY.md).
 
