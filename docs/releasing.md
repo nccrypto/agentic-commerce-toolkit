@@ -17,10 +17,9 @@ Run from the repository root:
 ```bash
 set -e
 python3 scripts/check_public_boundary.py .
-python3 -m compileall -q src scripts tests
-
 release_tmp="$(mktemp -d)"
 mkdir "$release_tmp/src" "$release_tmp/dist"
+PYTHONPYCACHEPREFIX="$release_tmp/pycache" python3 -m compileall -q src scripts tests
 git archive HEAD | tar -x -C "$release_tmp/src"
 python3 -m venv "$release_tmp/venv"
 (
@@ -30,13 +29,25 @@ python3 -m venv "$release_tmp/venv"
   "$release_tmp/venv/bin/python" -m build --outdir "$release_tmp/dist"
 )
 
+mkdir "$release_tmp/sdist"
+tar -xzf "$release_tmp"/dist/*.tar.gz -C "$release_tmp/sdist"
+sdist_roots=("$release_tmp"/sdist/*)
+(
+  cd "${sdist_roots[0]}"
+  "$release_tmp/venv/bin/python" scripts/check_public_boundary.py .
+  PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 "$release_tmp/venv/bin/python" -B -m unittest discover -s tests -v
+)
+
 python3 -m venv "$release_tmp/install"
 "$release_tmp/install/bin/python" -m pip install --disable-pip-version-check --no-deps "$release_tmp"/dist/*.whl
 (
   cd "$release_tmp"
   "$release_tmp/install/bin/agentic-commerce" --help
 )
-shasum -a 256 "$release_tmp"/dist/*
+(
+  cd "$release_tmp/dist"
+  shasum -a 256 ./*.whl ./*.tar.gz | tee SHA256SUMS
+)
 git diff --check
 git status --short --branch
 ```
@@ -52,10 +63,16 @@ git switch main
 git pull --ff-only origin main
 git tag -a "vX.Y.Z" -m "Release vX.Y.Z"
 git push origin "vX.Y.Z"
-gh release create "vX.Y.Z" --repo nccrypto/agentic-commerce-toolkit --verify-tag --generate-notes
+gh release create "vX.Y.Z" \
+  "$release_tmp"/dist/*.whl \
+  "$release_tmp"/dist/*.tar.gz \
+  "$release_tmp"/dist/SHA256SUMS \
+  --repo nccrypto/agentic-commerce-toolkit \
+  --verify-tag \
+  --generate-notes
 ```
 
-Verify the release page, tag target, changelog link, and required GitHub Actions run. Do not reuse or move a published version tag; correct mistakes with a new patch release.
+Run the verification and publication blocks in the same shell so `release_tmp` still identifies the verified artifacts. Verify the release page, attached checksums and distributions, tag target, changelog link, and required GitHub Actions run. Do not reuse or move a published version tag; correct mistakes with a new patch release.
 
 ## Rollback
 

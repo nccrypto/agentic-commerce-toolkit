@@ -2,7 +2,7 @@
 
 Open-source tools, adapters, schemas, and operational patterns for agent-native commerce, starting with Reppo and Virtuals ACP.
 
-> **Status:** v0.1.0 release candidate with a read-only Reppo ecosystem inspector.
+> **Status:** v0.1.0 — read-only Reppo ecosystem inspector.
 
 ## Mission
 
