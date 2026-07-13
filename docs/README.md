@@ -1,6 +1,7 @@
 # Documentation
 
 - [Reppo read-only ecosystem inspector](reppo-inspector.md)
+- [Provenance schemas](provenance-schemas.md)
 - [Read-only maintenance automation](automation.md)
 - [Release process](releasing.md)
 
