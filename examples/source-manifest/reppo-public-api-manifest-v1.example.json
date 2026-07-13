@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "1.0",
+  "manifestId": "example:reppo-public-api:2026-07-11",
+  "generatedAt": "2026-07-11T00:00:00Z",
+  "subject": {
+    "kind": "protocol-source",
+    "name": "Reppo public API inspector inputs",
+    "version": "v0.1.0",
+    "description": "Synthetic example manifest for public sources used by the read-only Reppo inspector."
+  },
+  "sources": [
+    {
+      "sourceId": "reppo-docs-api-reference",
+      "title": "Reppo API reference",
+      "url": "https://docs.reppo.xyz/",
+      "sourceType": "documentation",
+      "publisher": "Reppo",
+      "accessedAt": "2026-07-11T00:00:00Z",
+      "usage": {
+        "purpose": "schema-reference",
+        "derivedFacts": [
+          "The inspector should use public Reppo endpoints only.",
+          "Source URLs and fetch timing belong in the machine-readable output envelope."
+        ],
+        "limitations": [
+          "Documentation can drift from live API behavior, so compatibility checks should record partial failures instead of fabricating replacement data."
+        ]
+      }
+    },
+    {
+      "sourceId": "reppo-public-datanets-endpoint",
+      "title": "Reppo public datanet catalog endpoint",
+      "url": "https://api.reppo.xyz/public/subnets",
+      "sourceType": "api",
+      "publisher": "Reppo",
+      "accessedAt": "2026-07-11T00:00:00Z",
+      "usage": {
+        "purpose": "input",
+        "derivedFacts": [
+          "Datanet catalog responses are preserved under the inspector envelope data field.",
+          "The endpoint is queried read-only and does not require authentication."
+        ],
+        "limitations": [
+          "Availability and response shape can change upstream."
+        ]
+      }
+    }
+  ],
+  "notes": [
+    "This example is synthetic and contains no credentials, private account data, or local runtime state."
+  ]
+}

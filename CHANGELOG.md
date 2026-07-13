@@ -6,6 +6,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- Add a versioned source-manifest schema, documentation, and synthetic conforming example for public-source provenance records.
+
 ### Security
 
 - Generalize public-boundary policy and scanner rules so documentation does not enumerate non-public system identifiers.
