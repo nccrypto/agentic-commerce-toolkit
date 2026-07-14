@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "1.0",
+  "jobId": "example:reppo-inspection:2026-07-14",
+  "jobType": "reppo.public-inspection",
+  "status": "partial",
+  "startedAt": "2026-07-14T12:00:00Z",
+  "completedAt": "2026-07-14T12:00:02Z",
+  "request": {
+    "summary": "Inspect bounded public Reppo catalog endpoints using a synthetic request summary.",
+    "inputs": [
+      {
+        "name": "catalogs",
+        "value": ["datanets", "pods", "stats"]
+      },
+      {
+        "name": "limit",
+        "value": 10
+      }
+    ]
+  },
+  "result": {
+    "summary": "The public datanet and pod catalogs returned data; the documented stats route was unavailable.",
+    "data": {
+      "catalogs": {
+        "datanets": {
+          "available": true,
+          "itemsReturned": 2
+        },
+        "pods": {
+          "available": true,
+          "itemsReturned": 2
+        },
+        "stats": {
+          "available": false,
+          "httpStatus": 404
+        }
+      }
+    }
+  },
+  "provenance": {
+    "manifestId": "example:reppo-public-api:2026-07-11",
+    "manifestUrl": "https://raw.githubusercontent.com/nccrypto/agentic-commerce-toolkit/main/examples/source-manifest/reppo-public-api-manifest-v1.example.json",
+    "sourceIds": [
+      "reppo-docs-api-reference",
+      "reppo-public-datanets-endpoint"
+    ]
+  },
+  "errors": [
+    {
+      "code": "HTTP_ERROR",
+      "message": "The documented public stats route returned HTTP 404.",
+      "retryable": true
+    }
+  ],
+  "limitations": [
+    "This synthetic example does not represent a live compatibility check.",
+    "The provenance reference identifies public evidence but does not prove that an upstream source is still available."
+  ]
+}

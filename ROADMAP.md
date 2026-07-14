@@ -30,7 +30,7 @@ A phase is complete only when its artifacts are exercised and its verification g
 ## Phase 2 — Provenance and safety (`v0.2.0`)
 
 - [x] Versioned source-manifest schema
-- [ ] Structured agent-job result schema
+- [x] Structured agent-job result schema
 - [ ] Cost, timeout, and freshness fields
 - [ ] Dry-run and approval-control reference patterns
 
