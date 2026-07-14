@@ -2,6 +2,7 @@
 
 - [Reppo read-only ecosystem inspector](reppo-inspector.md)
 - [Provenance schemas](provenance-schemas.md)
+- [Agent job result schema](provenance-schemas.md#agent-job-result-v1)
 - [Read-only maintenance automation](automation.md)
 - [Release process](releasing.md)
 

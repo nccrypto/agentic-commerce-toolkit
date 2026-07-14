@@ -9,6 +9,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 ### Added
 
 - Add a versioned source-manifest schema, documentation, and synthetic conforming example for public-source provenance records.
+- Add a bounded agent-job result schema, documentation, and synthetic conforming example linked to source-manifest provenance.
 
 ### Security
 

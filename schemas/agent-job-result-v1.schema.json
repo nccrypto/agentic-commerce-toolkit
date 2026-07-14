@@ -1,0 +1,235 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/nccrypto/agentic-commerce-toolkit/main/schemas/agent-job-result-v1.schema.json",
+  "title": "Agentic Commerce Agent Job Result v1",
+  "description": "A bounded, public-only result envelope for an agentic-commerce job.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "jobId",
+    "jobType",
+    "status",
+    "startedAt",
+    "completedAt",
+    "request",
+    "result",
+    "provenance",
+    "errors",
+    "limitations"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "1.0"},
+    "jobId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._:-]{2,127}$",
+      "description": "Stable public identifier for the job; it must not contain account, wallet, credential, or private runtime identifiers."
+    },
+    "jobType": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9._-]{1,63}$"
+    },
+    "status": {
+      "enum": ["succeeded", "partial", "failed"]
+    },
+    "startedAt": {"type": "string", "format": "date-time"},
+    "completedAt": {"type": "string", "format": "date-time"},
+    "request": {"$ref": "#/$defs/request"},
+    "result": {
+      "oneOf": [
+        {"$ref": "#/$defs/result"},
+        {"type": "null"}
+      ]
+    },
+    "provenance": {"$ref": "#/$defs/provenance"},
+    "errors": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {"$ref": "#/$defs/error"}
+    },
+    "limitations": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 500
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"status": {"enum": ["succeeded", "partial"]}},
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {"result": {"$ref": "#/$defs/result"}}
+      }
+    },
+    {
+      "if": {
+        "properties": {"status": {"const": "failed"}},
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "result": {"type": "null"},
+          "errors": {"minItems": 1}
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary", "inputs"],
+      "properties": {
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "inputs": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "value"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^[a-z][a-zA-Z0-9._-]{0,63}$"
+              },
+              "value": {"$ref": "#/$defs/requestValue"}
+            }
+          }
+        }
+      }
+    },
+    "requestValue": {
+      "anyOf": [
+        {"$ref": "#/$defs/publicScalar"},
+        {
+          "type": "array",
+          "maxItems": 100,
+          "items": {"$ref": "#/$defs/publicScalar"}
+        }
+      ]
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary", "data"],
+      "properties": {
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "data": {
+          "type": "object",
+          "maxProperties": 100,
+          "additionalProperties": {"$ref": "#/$defs/publicValue"}
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifestId"],
+      "properties": {
+        "manifestId": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{2,127}$"
+        },
+        "manifestUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "Optional public URL for the conforming source manifest."
+        },
+        "sourceIds": {
+          "type": "array",
+          "maxItems": 100,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._:-]{1,127}$"
+          }
+        }
+      }
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]{1,63}$"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "retryable": {"type": "boolean"}
+      }
+    },
+    "publicScalar": {
+      "anyOf": [
+        {"type": "string", "maxLength": 1000},
+        {"type": "number"},
+        {"type": "boolean"},
+        {"type": "null"}
+      ]
+    },
+    "publicValue": {
+      "anyOf": [
+        {"$ref": "#/$defs/publicScalar"},
+        {
+          "type": "array",
+          "maxItems": 100,
+          "items": {"$ref": "#/$defs/publicValueLevel2"}
+        },
+        {
+          "type": "object",
+          "maxProperties": 100,
+          "additionalProperties": {"$ref": "#/$defs/publicValueLevel2"}
+        }
+      ]
+    },
+    "publicValueLevel2": {
+      "anyOf": [
+        {"$ref": "#/$defs/publicScalar"},
+        {
+          "type": "array",
+          "maxItems": 100,
+          "items": {"$ref": "#/$defs/publicValueLevel3"}
+        },
+        {
+          "type": "object",
+          "maxProperties": 100,
+          "additionalProperties": {"$ref": "#/$defs/publicValueLevel3"}
+        }
+      ]
+    },
+    "publicValueLevel3": {
+      "anyOf": [
+        {"$ref": "#/$defs/publicScalar"},
+        {
+          "type": "array",
+          "maxItems": 100,
+          "items": {"$ref": "#/$defs/publicScalar"}
+        },
+        {
+          "type": "object",
+          "maxProperties": 100,
+          "additionalProperties": {"$ref": "#/$defs/publicScalar"}
+        }
+      ]
+    }
+  }
+}
