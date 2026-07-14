@@ -4,6 +4,8 @@ from pathlib import Path
 
 from jsonschema import Draft202012Validator, FormatChecker
 
+from agentic_commerce.action_control import action_digest, evaluate_action_control
+
 
 ROOT = Path(__file__).parents[1]
 INSPECTOR_SCHEMA = ROOT / "schemas" / "inspector-envelope-v1.schema.json"
@@ -12,6 +14,9 @@ SOURCE_MANIFEST_SCHEMA = ROOT / "schemas" / "source-manifest-v1.schema.json"
 SOURCE_MANIFEST_EXAMPLE = ROOT / "examples" / "source-manifest" / "reppo-public-api-manifest-v1.example.json"
 AGENT_JOB_RESULT_SCHEMA = ROOT / "schemas" / "agent-job-result-v1.schema.json"
 AGENT_JOB_RESULT_EXAMPLE = ROOT / "examples" / "agent-job-result" / "reppo-inspection-result-v1.example.json"
+ACTION_CONTROL_SCHEMA = ROOT / "schemas" / "action-control-v1.schema.json"
+ACTION_CONTROL_DRY_RUN_EXAMPLE = ROOT / "examples" / "action-control" / "dry-run-v1.example.json"
+ACTION_CONTROL_AUTHORIZED_EXAMPLE = ROOT / "examples" / "action-control" / "authorized-action-v1.example.json"
 
 
 def load_json(path):
@@ -37,6 +42,65 @@ class SchemaContractTests(unittest.TestCase):
 
     def test_agent_job_result_example_conforms_to_agent_job_result_v1(self):
         self.assert_conforms(AGENT_JOB_RESULT_SCHEMA, AGENT_JOB_RESULT_EXAMPLE)
+
+    def test_action_control_examples_conform_to_action_control_v1(self):
+        self.assert_conforms(ACTION_CONTROL_SCHEMA, ACTION_CONTROL_DRY_RUN_EXAMPLE)
+        self.assert_conforms(ACTION_CONTROL_SCHEMA, ACTION_CONTROL_AUTHORIZED_EXAMPLE)
+
+    def test_action_control_schema_enforces_default_deny(self):
+        schema = load_json(ACTION_CONTROL_SCHEMA)
+        validator = Draft202012Validator(schema, format_checker=FormatChecker())
+
+        dry_run = load_json(ACTION_CONTROL_DRY_RUN_EXAMPLE)
+        dry_run["decision"]["mayExecute"] = True
+        self.assertFalse(validator.is_valid(dry_run))
+
+        authorized = load_json(ACTION_CONTROL_AUTHORIZED_EXAMPLE)
+        authorized["approval"] = None
+        self.assertFalse(validator.is_valid(authorized))
+
+        private_shaped = load_json(ACTION_CONTROL_DRY_RUN_EXAMPLE)
+        private_shaped["request"]["localPath"] = "not allowed"
+        self.assertFalse(validator.is_valid(private_shaped))
+
+    def test_action_control_evaluator_denials_conform_to_schema(self):
+        schema = load_json(ACTION_CONTROL_SCHEMA)
+        validator = Draft202012Validator(schema, format_checker=FormatChecker())
+        request = {
+            "actionId": "example:catalog-update:2026-07-14",
+            "actionType": "example.catalog-update",
+            "mode": "execute",
+            "summary": "Prepare a synthetic update to a public example catalog.",
+            "parameters": [{"name": "itemCount", "value": 2}],
+        }
+        approval = {
+            "approvalId": "example:approval:catalog-update:2026-07-14",
+            "actionId": request["actionId"],
+            "actionType": request["actionType"],
+            "actionDigest": action_digest(request),
+            "decision": "approved",
+            "issuedAt": "2026-07-14T12:00:00Z",
+            "expiresAt": "2026-07-14T12:30:00Z",
+            "issuerType": "human",
+        }
+        expired = evaluate_action_control(
+            "example:control:expired:2026-07-14",
+            request,
+            "2026-07-14T13:00:00Z",
+            approval,
+        )
+        invalid_approval = dict(approval)
+        invalid_approval["accountId"] = "not allowed"
+        invalid = evaluate_action_control(
+            "example:control:invalid:2026-07-14",
+            request,
+            "2026-07-14T13:00:00Z",
+            invalid_approval,
+        )
+
+        self.assertTrue(validator.is_valid(expired))
+        self.assertTrue(validator.is_valid(invalid))
+
 
     def test_agent_job_operational_fields_are_backward_compatible_and_optional(self):
         schema = load_json(AGENT_JOB_RESULT_SCHEMA)

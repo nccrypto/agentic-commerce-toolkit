@@ -84,3 +84,7 @@ The public pod catalog currently returns the full catalog even when a smaller `l
 ### D9. Add operational observations to v1 without breaking existing documents
 
 Cost, timeout, and freshness are optional, strictly bounded objects in the agent-job result v1 schema so documents created against the initial v1 contract remain valid. Costs use non-negative decimal strings rather than JSON numbers to avoid floating-point ambiguity. These fields expose public job-level observations only and exclude account, wallet, payment-credential, internal-budget, and provider-secret data.
+
+### D10. Separate authorization from execution and default to denial
+
+The action-control evaluator computes a stable digest over a bounded public action and emits only a dry-run, authorized, or rejected decision. It never executes an action. Execute requests require an unexpired approval whose action identifier, type, and digest match exactly; missing, malformed, expired, rejected, future-issued, or mismatched approvals deny execution. A separate adapter must re-check authorization at its execution boundary.

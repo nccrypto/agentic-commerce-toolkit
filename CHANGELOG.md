@@ -11,6 +11,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - Add a versioned source-manifest schema, documentation, and synthetic conforming example for public-source provenance records.
 - Add a bounded agent-job result schema, documentation, and synthetic conforming example linked to source-manifest provenance.
 - Add backward-compatible cost, timeout, and freshness metadata to agent-job results.
+- Add a default-deny action-control schema, deterministic evaluator, documentation, and synthetic dry-run and authorized-action examples.
 
 ### Security
 

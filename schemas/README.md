@@ -6,5 +6,7 @@
 - `../examples/source-manifest/reppo-public-api-manifest-v1.example.json` — synthetic conforming source-manifest example validated in CI.
 - `agent-job-result-v1.schema.json` — bounded public result envelope for structured agent jobs, including optional cost, timeout, and freshness metadata.
 - `../examples/agent-job-result/reppo-inspection-result-v1.example.json` — synthetic conforming agent-job result validated in CI.
+- `action-control-v1.schema.json` — default-deny dry-run and approval-control decision contract.
+- `../examples/action-control/` — synthetic dry-run and authorized-action examples validated in CI.
 
 Versioned JSON schemas for additional safety patterns will live here.
