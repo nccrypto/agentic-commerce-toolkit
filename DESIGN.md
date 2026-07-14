@@ -80,3 +80,7 @@ Runtime networking is pinned to the canonical Reppo public API and uses `urllib`
 ### D8. Defend against upstream pagination and availability drift
 
 The public pod catalog currently returns the full catalog even when a smaller `limit` is requested. The inspector therefore validates `data.subnets` and `data.pods`, downloads only within the hard response cap, and slices returned collections to the caller's requested limit. The documented public stats route currently returns HTTP 404; aggregate commands preserve successful catalog data and mark the result partial rather than inventing replacement metrics.
+
+### D9. Add operational observations to v1 without breaking existing documents
+
+Cost, timeout, and freshness are optional, strictly bounded objects in the agent-job result v1 schema so documents created against the initial v1 contract remain valid. Costs use non-negative decimal strings rather than JSON numbers to avoid floating-point ambiguity. These fields expose public job-level observations only and exclude account, wallet, payment-credential, internal-budget, and provider-secret data.
