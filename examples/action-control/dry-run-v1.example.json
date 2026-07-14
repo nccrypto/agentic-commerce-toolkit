@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "1.0",
+  "controlId": "example:control:dry-run:2026-07-14",
+  "evaluatedAt": "2026-07-14T13:00:00Z",
+  "request": {
+    "actionId": "example:catalog-update:2026-07-14",
+    "actionType": "example.catalog-update",
+    "actionDigest": "e17e5f2954ef59e20a5cbad2c0ef7825f8aad5937c37bddfc4acc1b44cad3223",
+    "mode": "dry-run",
+    "summary": "Prepare a synthetic update to a public example catalog.",
+    "parameters": [
+      {
+        "name": "catalog",
+        "value": "synthetic-public-examples"
+      },
+      {
+        "name": "itemCount",
+        "value": 2
+      }
+    ]
+  },
+  "approval": null,
+  "decision": {
+    "status": "dry-run",
+    "mayExecute": false,
+    "reasonCode": "DRY_RUN_ONLY",
+    "message": "The action was evaluated only; execution is not authorized."
+  },
+  "limitations": [
+    "Authorization is not execution; a separate adapter must perform any approved action.",
+    "This control record must contain public inputs only and must not contain credentials, wallet data, account identifiers, or private runtime state."
+  ]
+}

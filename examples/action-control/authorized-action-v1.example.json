@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "1.0",
+  "controlId": "example:control:authorized:2026-07-14",
+  "evaluatedAt": "2026-07-14T13:00:00Z",
+  "request": {
+    "actionId": "example:catalog-update:2026-07-14",
+    "actionType": "example.catalog-update",
+    "actionDigest": "e17e5f2954ef59e20a5cbad2c0ef7825f8aad5937c37bddfc4acc1b44cad3223",
+    "mode": "execute",
+    "summary": "Prepare a synthetic update to a public example catalog.",
+    "parameters": [
+      {
+        "name": "catalog",
+        "value": "synthetic-public-examples"
+      },
+      {
+        "name": "itemCount",
+        "value": 2
+      }
+    ]
+  },
+  "approval": {
+    "approvalId": "example:approval:catalog-update:2026-07-14",
+    "actionId": "example:catalog-update:2026-07-14",
+    "actionType": "example.catalog-update",
+    "actionDigest": "e17e5f2954ef59e20a5cbad2c0ef7825f8aad5937c37bddfc4acc1b44cad3223",
+    "decision": "approved",
+    "issuedAt": "2026-07-14T12:55:00Z",
+    "expiresAt": "2026-07-14T13:30:00Z",
+    "issuerType": "human",
+    "note": "Synthetic approval for the public reference example only."
+  },
+  "decision": {
+    "status": "authorized",
+    "mayExecute": true,
+    "reasonCode": "APPROVED",
+    "message": "The action is authorized for a separate execution adapter."
+  },
+  "limitations": [
+    "Authorization is not execution; a separate adapter must perform any approved action.",
+    "This control record must contain public inputs only and must not contain credentials, wallet data, account identifiers, or private runtime state."
+  ]
+}

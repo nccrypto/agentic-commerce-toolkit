@@ -1,0 +1,314 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/nccrypto/agentic-commerce-toolkit/main/schemas/action-control-v1.schema.json",
+  "title": "Agentic Commerce Action Control v1",
+  "description": "A default-deny control decision for a bounded dry-run or approval-scoped public action.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "controlId",
+    "evaluatedAt",
+    "request",
+    "approval",
+    "decision",
+    "limitations"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "1.0"},
+    "controlId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._:-]{2,127}$"
+    },
+    "evaluatedAt": {"type": "string", "format": "date-time"},
+    "request": {"$ref": "#/$defs/request"},
+    "approval": {
+      "oneOf": [
+        {"$ref": "#/$defs/approval"},
+        {"type": "null"}
+      ]
+    },
+    "decision": {"$ref": "#/$defs/decision"},
+    "limitations": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 500
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "request": {
+            "properties": {"mode": {"const": "dry-run"}},
+            "required": ["mode"]
+          }
+        },
+        "required": ["request"]
+      },
+      "then": {
+        "properties": {
+          "approval": {"type": "null"},
+          "decision": {
+            "properties": {
+              "status": {"const": "dry-run"},
+              "mayExecute": {"const": false},
+              "reasonCode": {"const": "DRY_RUN_ONLY"}
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "decision": {
+            "properties": {"status": {"const": "dry-run"}},
+            "required": ["status"]
+          }
+        },
+        "required": ["decision"]
+      },
+      "then": {
+        "properties": {
+          "request": {
+            "properties": {"mode": {"const": "dry-run"}}
+          },
+          "approval": {"type": "null"},
+          "decision": {
+            "properties": {
+              "mayExecute": {"const": false},
+              "reasonCode": {"const": "DRY_RUN_ONLY"}
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "decision": {
+            "properties": {"status": {"const": "authorized"}},
+            "required": ["status"]
+          }
+        },
+        "required": ["decision"]
+      },
+      "then": {
+        "properties": {
+          "request": {
+            "properties": {"mode": {"const": "execute"}}
+          },
+          "approval": {
+            "allOf": [
+              {"$ref": "#/$defs/approval"},
+              {"properties": {"decision": {"const": "approved"}}}
+            ]
+          },
+          "decision": {
+            "properties": {
+              "mayExecute": {"const": true},
+              "reasonCode": {"const": "APPROVED"}
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "decision": {
+            "properties": {"status": {"const": "rejected"}},
+            "required": ["status"]
+          }
+        },
+        "required": ["decision"]
+      },
+      "then": {
+        "properties": {
+          "request": {
+            "properties": {"mode": {"const": "execute"}}
+          },
+          "decision": {
+            "properties": {
+              "mayExecute": {"const": false},
+              "reasonCode": {
+                "enum": [
+                  "APPROVAL_REQUIRED",
+                  "APPROVAL_REJECTED",
+                  "APPROVAL_EXPIRED",
+                  "APPROVAL_SCOPE_MISMATCH",
+                  "INVALID_APPROVAL"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "request": {
+            "properties": {"mode": {"const": "execute"}},
+            "required": ["mode"]
+          },
+          "approval": {"type": "null"}
+        },
+        "required": ["request", "approval"]
+      },
+      "then": {
+        "properties": {
+          "decision": {
+            "properties": {
+              "status": {"const": "rejected"},
+              "mayExecute": {"const": false},
+              "reasonCode": {
+                "enum": ["APPROVAL_REQUIRED", "INVALID_APPROVAL"]
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actionId",
+        "actionType",
+        "actionDigest",
+        "mode",
+        "summary",
+        "parameters"
+      ],
+      "properties": {
+        "actionId": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{2,127}$"
+        },
+        "actionType": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9._-]{1,63}$"
+        },
+        "actionDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "mode": {"enum": ["dry-run", "execute"]},
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "parameters": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {"$ref": "#/$defs/parameter"}
+        }
+      }
+    },
+    "parameter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "value"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-zA-Z0-9._-]{0,63}$"
+        },
+        "value": {"$ref": "#/$defs/parameterValue"}
+      }
+    },
+    "parameterValue": {
+      "anyOf": [
+        {"$ref": "#/$defs/publicScalar"},
+        {
+          "type": "array",
+          "maxItems": 100,
+          "items": {"$ref": "#/$defs/publicScalar"}
+        }
+      ]
+    },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "approvalId",
+        "actionId",
+        "actionType",
+        "actionDigest",
+        "decision",
+        "issuedAt",
+        "expiresAt",
+        "issuerType"
+      ],
+      "properties": {
+        "approvalId": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{2,127}$"
+        },
+        "actionId": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._:-]{2,127}$"
+        },
+        "actionType": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9._-]{1,63}$"
+        },
+        "actionDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "decision": {"enum": ["approved", "rejected"]},
+        "issuedAt": {"type": "string", "format": "date-time"},
+        "expiresAt": {"type": "string", "format": "date-time"},
+        "issuerType": {"enum": ["human", "policy"]},
+        "note": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "mayExecute", "reasonCode", "message"],
+      "properties": {
+        "status": {"enum": ["dry-run", "authorized", "rejected"]},
+        "mayExecute": {"type": "boolean"},
+        "reasonCode": {
+          "enum": [
+            "DRY_RUN_ONLY",
+            "APPROVED",
+            "APPROVAL_REQUIRED",
+            "APPROVAL_REJECTED",
+            "APPROVAL_EXPIRED",
+            "APPROVAL_SCOPE_MISMATCH",
+            "INVALID_APPROVAL"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        }
+      }
+    },
+    "publicScalar": {
+      "anyOf": [
+        {"type": "string", "maxLength": 1000},
+        {"type": "number", "minimum": -1000000000000000000, "maximum": 1000000000000000000},
+        {"type": "boolean"},
+        {"type": "null"}
+      ]
+    }
+  }
+}

@@ -27,7 +27,7 @@ Public contributions must be independently reviewable from public sources or int
 
 1. **Public foundation** — governance, security, CI, and boundary checks.
 2. **Reppo read-only inspector** — public API discovery and diagnostics with stable JSON.
-3. **Provenance schemas** — source manifests and structured agent-job results.
+3. **Provenance and safety schemas** — source manifests, structured agent-job results, and default-deny action controls.
 4. **Virtuals ACP reference integration** — a bounded, observable example service.
 5. **Community validation** — upstream feedback, external users, and a documented inference-sponsorship decision.
 
@@ -80,6 +80,8 @@ python3 -m build
 See [docs/reppo-inspector.md](docs/reppo-inspector.md) for the JSON contract, canonical-host policy, input limits, exit codes, endpoint boundary, and failure behavior. Release maintainers should follow [docs/releasing.md](docs/releasing.md).
 
 For portable public-source provenance records and bounded structured job results, see [docs/provenance-schemas.md](docs/provenance-schemas.md), `schemas/source-manifest-v1.schema.json`, and `schemas/agent-job-result-v1.schema.json`.
+
+For deterministic dry-run and default-deny approval decisions, see [docs/action-controls.md](docs/action-controls.md), `schemas/action-control-v1.schema.json`, and `agentic_commerce.action_control`. The evaluator authorizes or rejects bounded actions but never executes them.
 
 For silent compatibility drift detection and bounded weekly project evidence, see [docs/automation.md](docs/automation.md). These helpers are read-only and never perform GitHub mutations.
 
