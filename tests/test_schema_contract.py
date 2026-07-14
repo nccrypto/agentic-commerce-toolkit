@@ -38,6 +38,36 @@ class SchemaContractTests(unittest.TestCase):
     def test_agent_job_result_example_conforms_to_agent_job_result_v1(self):
         self.assert_conforms(AGENT_JOB_RESULT_SCHEMA, AGENT_JOB_RESULT_EXAMPLE)
 
+    def test_agent_job_operational_fields_are_backward_compatible_and_optional(self):
+        schema = load_json(AGENT_JOB_RESULT_SCHEMA)
+        validator = Draft202012Validator(schema, format_checker=FormatChecker())
+        job_result = load_json(AGENT_JOB_RESULT_EXAMPLE)
+        job_result.pop("cost")
+        job_result.pop("timeout")
+        job_result.pop("freshness")
+
+        self.assertTrue(validator.is_valid(job_result))
+
+    def test_agent_job_operational_fields_are_bounded(self):
+        schema = load_json(AGENT_JOB_RESULT_SCHEMA)
+        validator = Draft202012Validator(schema, format_checker=FormatChecker())
+
+        invalid_cost = load_json(AGENT_JOB_RESULT_EXAMPLE)
+        invalid_cost["cost"]["amount"] = "-1"
+        self.assertFalse(validator.is_valid(invalid_cost))
+
+        private_cost = load_json(AGENT_JOB_RESULT_EXAMPLE)
+        private_cost["cost"]["accountId"] = "not allowed"
+        self.assertFalse(validator.is_valid(private_cost))
+
+        invalid_timeout = load_json(AGENT_JOB_RESULT_EXAMPLE)
+        invalid_timeout["timeout"]["limitMs"] = 0
+        self.assertFalse(validator.is_valid(invalid_timeout))
+
+        incomplete_freshness = load_json(AGENT_JOB_RESULT_EXAMPLE)
+        incomplete_freshness["freshness"].pop("dataAsOf")
+        self.assertFalse(validator.is_valid(incomplete_freshness))
+
     def test_source_manifest_requires_public_source_records(self):
         schema = load_json(SOURCE_MANIFEST_SCHEMA)
         validator = Draft202012Validator(schema, format_checker=FormatChecker())

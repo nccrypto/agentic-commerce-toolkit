@@ -31,7 +31,7 @@ A phase is complete only when its artifacts are exercised and its verification g
 
 - [x] Versioned source-manifest schema
 - [x] Structured agent-job result schema
-- [ ] Cost, timeout, and freshness fields
+- [x] Cost, timeout, and freshness fields
 - [ ] Dry-run and approval-control reference patterns
 
 **Gate:** another example can consume the schemas without private project context.

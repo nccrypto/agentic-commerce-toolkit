@@ -40,10 +40,19 @@ See `examples/source-manifest/reppo-public-api-manifest-v1.example.json` for a s
 - a bounded request summary made of named public scalar inputs;
 - structured result data for successful and partial jobs, or `null` for failed jobs;
 - provenance linking the result to a source manifest by `manifestId`, with an optional public manifest URL and source identifiers;
+- optional bounded cost, timeout, and freshness metadata;
 - bounded error and limitation records.
 
 The status values are `succeeded`, `partial`, and `failed`. Failed jobs must contain at least one error and use `null` for `result`; successful and partial jobs must contain a structured result object. Producers must ensure `completedAt` is not earlier than `startedAt`, because JSON Schema cannot compare the two timestamps.
 
 Request and result containers have explicit item, property, string, and finite nesting limits. These limits reduce the risk of accidental log or blob embedding, but they do not make private content safe: producers must still exclude credentials, wallet or account data, local paths, private runtime identifiers, and unpublished material.
 
-See `examples/agent-job-result/reppo-inspection-result-v1.example.json` for a synthetic partial inspection result linked to the source-manifest example. Cost, timeout, and freshness fields remain a separate Phase 2 roadmap item.
+The optional operational fields are backward-compatible additions to v1:
+
+- `cost` records a non-negative decimal-string `amount`, a bounded uppercase currency or settlement-unit code, and whether the amount was measured or estimated. Decimal strings avoid floating-point ambiguity.
+- `timeout` records the configured limit, observed elapsed time, and whether the job timed out. Durations are bounded integer milliseconds.
+- `freshness` records when freshness was evaluated and whether data was `fresh`, `stale`, or `unknown`. Fresh and stale records also require `dataAsOf` and `maxAgeSeconds`; producers determine the status and must document relevant limitations.
+
+These fields expose public job-level observations only. They must not contain account identifiers, payment credentials, wallet data, internal budgets, billing records, or provider secrets.
+
+See `examples/agent-job-result/reppo-inspection-result-v1.example.json` for a synthetic partial inspection result linked to the source-manifest example.
