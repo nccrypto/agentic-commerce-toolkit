@@ -5,8 +5,11 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import time
+from pathlib import Path
 from typing import Any, Callable, Sequence, TextIO
 
+from .acp_evidence import receipt_exit_code, run_local_evidence_job
 from .reppo import DEFAULT_BASE_URL, Inspector, Transport, UrllibTransport, utc_now
 
 
@@ -42,7 +45,30 @@ def build_parser() -> argparse.ArgumentParser:
     snapshot = commands.add_parser("snapshot", help="aggregate public ecosystem data")
     snapshot.add_argument("--limit", type=int, default=20)
     _common_options(snapshot)
+
+    virtuals = ecosystems.add_parser(
+        "virtuals-acp", help="run bounded Virtuals ACP reference flows"
+    )
+    virtuals_commands = virtuals.add_subparsers(
+        dest="virtuals_command", required=True
+    )
+    evidence = virtuals_commands.add_parser(
+        "verify-evidence", help="verify a public evidence bundle in local mode"
+    )
+    evidence.add_argument("--request", required=True, metavar="FILE")
+    evidence.add_argument("--timeout-ms", type=int, default=5000)
+    evidence.add_argument("--max-attempts", type=int, default=3)
+    evidence.add_argument("--pretty", action="store_true")
     return parser
+
+
+def _print_json(value: Any, *, pretty: bool, output: TextIO) -> None:
+    dump_options: dict[str, Any] = {"sort_keys": True}
+    if pretty:
+        dump_options["indent"] = 2
+    else:
+        dump_options["separators"] = (",", ":")
+    print(json.dumps(value, **dump_options), file=output)
 
 
 def main(
@@ -51,9 +77,38 @@ def main(
     stdout: TextIO | None = None,
     transport: Transport | None = None,
     clock: Callable[[], str] = utc_now,
+    monotonic: Callable[[], float] = time.monotonic,
 ) -> int:
     args = build_parser().parse_args(argv)
     output = stdout or sys.stdout
+    if args.ecosystem == "virtuals-acp":
+        try:
+            request_path = Path(args.request)
+            if request_path.stat().st_size > 1_000_000:
+                raise ValueError("oversized input")
+            request = json.loads(request_path.read_text(encoding="utf-8"))
+            receipt = run_local_evidence_job(
+                request,
+                timeout_ms=args.timeout_ms,
+                max_attempts=args.max_attempts,
+                clock=clock,
+                monotonic=monotonic,
+            )
+        except (OSError, UnicodeError, json.JSONDecodeError, ValueError):
+            _print_json(
+                {
+                    "error": {
+                        "code": "INPUT_ERROR",
+                        "message": "Unable to read a bounded local evidence request.",
+                    }
+                },
+                pretty=args.pretty,
+                output=output,
+            )
+            return 1
+        _print_json(receipt, pretty=args.pretty, output=output)
+        return receipt_exit_code(receipt)
+
     inspector = Inspector(
         base_url=args.base_url,
         timeout=args.timeout,
@@ -74,10 +129,5 @@ def main(
         )
     else:
         result = inspector.snapshot(limit=args.limit)
-    dump_options: dict[str, Any] = {"sort_keys": True}
-    if args.pretty:
-        dump_options["indent"] = 2
-    else:
-        dump_options["separators"] = (",", ":")
-    print(json.dumps(result.envelope, **dump_options), file=output)
+    _print_json(result.envelope, pretty=args.pretty, output=output)
     return result.exit_code

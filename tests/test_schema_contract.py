@@ -17,6 +17,10 @@ AGENT_JOB_RESULT_EXAMPLE = ROOT / "examples" / "agent-job-result" / "reppo-inspe
 ACTION_CONTROL_SCHEMA = ROOT / "schemas" / "action-control-v1.schema.json"
 ACTION_CONTROL_DRY_RUN_EXAMPLE = ROOT / "examples" / "action-control" / "dry-run-v1.example.json"
 ACTION_CONTROL_AUTHORIZED_EXAMPLE = ROOT / "examples" / "action-control" / "authorized-action-v1.example.json"
+ACP_EVIDENCE_REQUEST_SCHEMA = ROOT / "schemas" / "acp-evidence-request-v1.schema.json"
+ACP_EVIDENCE_REQUEST_EXAMPLE = ROOT / "examples" / "virtuals-acp-evidence" / "request-v1.example.json"
+ACP_EVIDENCE_RECEIPT_EXAMPLE = ROOT / "examples" / "virtuals-acp-evidence" / "receipt-v1.example.json"
+ACP_EVIDENCE_OFFERING_EXAMPLE = ROOT / "examples" / "virtuals-acp-evidence" / "offering-v1.example.json"
 
 
 def load_json(path):
@@ -46,6 +50,21 @@ class SchemaContractTests(unittest.TestCase):
     def test_action_control_examples_conform_to_action_control_v1(self):
         self.assert_conforms(ACTION_CONTROL_SCHEMA, ACTION_CONTROL_DRY_RUN_EXAMPLE)
         self.assert_conforms(ACTION_CONTROL_SCHEMA, ACTION_CONTROL_AUTHORIZED_EXAMPLE)
+
+    def test_acp_evidence_examples_conform_to_public_contracts(self):
+        self.assert_conforms(ACP_EVIDENCE_REQUEST_SCHEMA, ACP_EVIDENCE_REQUEST_EXAMPLE)
+        self.assert_conforms(AGENT_JOB_RESULT_SCHEMA, ACP_EVIDENCE_RECEIPT_EXAMPLE)
+
+    def test_acp_offering_example_is_bounded_and_nonexecuting(self):
+        offering = load_json(ACP_EVIDENCE_OFFERING_EXAMPLE)
+
+        self.assertEqual(offering["name"], "Evidence Verify")
+        self.assertEqual(offering["priceType"], "fixed")
+        self.assertGreater(offering["priceValue"], 0)
+        self.assertGreaterEqual(offering["slaMinutes"], 5)
+        self.assertFalse(offering["requiredFunds"])
+        self.assertTrue(offering["isHidden"])
+        self.assertFalse(offering["requirements"].get("additionalProperties", True))
 
     def test_action_control_schema_enforces_default_deny(self):
         schema = load_json(ACTION_CONTROL_SCHEMA)

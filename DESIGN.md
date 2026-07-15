@@ -88,3 +88,7 @@ Cost, timeout, and freshness are optional, strictly bounded objects in the agent
 ### D10. Separate authorization from execution and default to denial
 
 The action-control evaluator computes a stable digest over a bounded public action and emits only a dry-run, authorized, or rejected decision. It never executes an action. Execute requests require an unexpired approval whose action identifier, type, and digest match exactly; missing, malformed, expired, rejected, future-issued, or mismatched approvals deny execution. A separate adapter must re-check authorization at its execution boundary.
+
+### D11. Use public-evidence verification as the first Virtuals ACP job
+
+The first ACP reference provider verifies a source manifest and agent-job result, checks their provenance linkage and public HTTPS locations, and returns the existing agent-job result contract as its receipt. This fills a portable checker gap without duplicating the official CLI, SDK, or on-chain evaluator showcases. Local mode models the documented buyer/provider lifecycle with zero measured cost and bounded timeout/retries, but performs no authentication, wallet, payment, signing, inference, network, or live ACP operation. A future live adapter remains separate and approval-gated.

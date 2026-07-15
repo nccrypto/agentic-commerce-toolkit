@@ -1,0 +1,49 @@
+{
+  "name": "Evidence Verify",
+  "description": "Validate a public source manifest and agent-job result, verify provenance linkage and public HTTPS source policy, and return a machine-readable receipt.",
+  "priceType": "fixed",
+  "priceValue": 0.01,
+  "slaMinutes": 5,
+  "requirements": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "schemaVersion",
+      "requestId",
+      "jobType",
+      "mode",
+      "sourceManifest",
+      "jobResult"
+    ],
+    "properties": {
+      "schemaVersion": {"const": "1.0"},
+      "requestId": {"type": "string", "minLength": 3, "maxLength": 100},
+      "jobType": {"const": "virtuals-acp.public-evidence-verification"},
+      "mode": {"enum": ["local", "virtuals-acp"]},
+      "sourceManifest": {"type": "object", "minProperties": 1, "maxProperties": 20},
+      "jobResult": {"type": "object", "minProperties": 1, "maxProperties": 30}
+    }
+  },
+  "deliverable": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "required": [
+      "schemaVersion",
+      "jobId",
+      "jobType",
+      "status",
+      "request",
+      "result",
+      "provenance",
+      "errors",
+      "limitations"
+    ],
+    "properties": {
+      "schemaVersion": {"const": "1.0"},
+      "jobType": {"const": "virtuals-acp.public-evidence-verification"}
+    }
+  },
+  "requiredFunds": false,
+  "isHidden": true
+}

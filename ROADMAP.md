@@ -38,11 +38,11 @@ A phase is complete only when its artifacts are exercised and its verification g
 
 ## Phase 3 — Virtuals ACP reference service (`v0.3.0`)
 
-- [ ] Select one narrowly useful ACP job
-- [ ] Implement local/test mode before paid inference
-- [ ] Add bounded cost, timeout, and retry behavior
-- [ ] Return sources, limitations, and machine-readable receipts
-- [ ] Test buyer-to-provider flow
+- [x] Select one narrowly useful ACP job.
+- [x] Build a local/test mode before paid inference.
+- [x] Make cost, timeout, and retry behavior explicit.
+- [x] Expose sources, limitations, and machine-readable receipts.
+- [x] Test buyer-to-provider flow end to end with synthetic fixtures.
 
 **Gate:** end-to-end test job returns a sourced result with observable cost and failure behavior.
 

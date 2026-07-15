@@ -1,0 +1,127 @@
+{
+  "schemaVersion": "1.0",
+  "jobId": "receipt:example:public-evidence:2026-07-15",
+  "jobType": "virtuals-acp.public-evidence-verification",
+  "status": "succeeded",
+  "startedAt": "2026-07-15T12:15:00Z",
+  "completedAt": "2026-07-15T12:15:00Z",
+  "request": {
+    "summary": "Verify a bounded public evidence bundle in the local Virtuals ACP reference flow.",
+    "inputs": [
+      {
+        "name": "requestId",
+        "value": "example:public-evidence:2026-07-15"
+      },
+      {
+        "name": "manifestId",
+        "value": "example:reppo-public-api:2026-07-11"
+      },
+      {
+        "name": "sourceJobId",
+        "value": "example:reppo-inspection:2026-07-14"
+      },
+      {
+        "name": "mode",
+        "value": "local"
+      },
+      {
+        "name": "maxAttempts",
+        "value": 3
+      }
+    ]
+  },
+  "result": {
+    "summary": "All public evidence checks passed.",
+    "data": {
+      "verdict": "pass",
+      "mode": "local",
+      "attempts": 1,
+      "checks": [
+        {
+          "checkId": "source-manifest-contract",
+          "status": "pass",
+          "summary": "The candidate conforms to source-manifest-v1.",
+          "findings": []
+        },
+        {
+          "checkId": "agent-job-result-contract",
+          "status": "pass",
+          "summary": "The candidate conforms to agent-job-result-v1.",
+          "findings": []
+        },
+        {
+          "checkId": "provenance-linkage",
+          "status": "pass",
+          "summary": "Manifest and source identifiers are consistently linked.",
+          "findings": []
+        },
+        {
+          "checkId": "public-source-policy",
+          "status": "pass",
+          "summary": "All referenced source locations use allowed public HTTPS URLs.",
+          "findings": []
+        }
+      ],
+      "sources": [
+        {
+          "sourceId": "reppo-docs-api-reference",
+          "url": "https://docs.reppo.xyz/"
+        },
+        {
+          "sourceId": "reppo-public-datanets-endpoint",
+          "url": "https://api.reppo.xyz/public/subnets"
+        }
+      ],
+      "lifecycle": [
+        {
+          "status": "open",
+          "at": "2026-07-15T12:15:00Z"
+        },
+        {
+          "status": "budget_set",
+          "at": "2026-07-15T12:15:00Z"
+        },
+        {
+          "status": "funded",
+          "at": "2026-07-15T12:15:00Z"
+        },
+        {
+          "status": "submitted",
+          "at": "2026-07-15T12:15:00Z"
+        },
+        {
+          "status": "completed",
+          "at": "2026-07-15T12:15:00Z"
+        }
+      ]
+    }
+  },
+  "provenance": {
+    "manifestId": "example:reppo-public-api:2026-07-11",
+    "sourceIds": [
+      "reppo-docs-api-reference",
+      "reppo-public-datanets-endpoint"
+    ]
+  },
+  "cost": {
+    "amount": "0",
+    "currency": "USD",
+    "basis": "measured"
+  },
+  "timeout": {
+    "limitMs": 5000,
+    "elapsedMs": 0,
+    "timedOut": false
+  },
+  "freshness": {
+    "evaluatedAt": "2026-07-15T12:15:00Z",
+    "status": "stale",
+    "dataAsOf": "2026-07-11T00:00:00Z",
+    "maxAgeSeconds": 86400
+  },
+  "errors": [],
+  "limitations": [
+    "Local mode simulates the ACP buyer/provider lifecycle without creating, funding, or settling a live Virtuals ACP job.",
+    "A passing receipt confirms contract, linkage, and public-location checks; it does not attest that source claims are true or current."
+  ]
+}

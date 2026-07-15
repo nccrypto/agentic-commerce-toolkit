@@ -12,6 +12,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - Add a bounded agent-job result schema, documentation, and synthetic conforming example linked to source-manifest provenance.
 - Add backward-compatible cost, timeout, and freshness metadata to agent-job results.
 - Add a default-deny action-control schema, deterministic evaluator, documentation, and synthetic dry-run and authorized-action examples.
+- Add a deterministic local Virtuals ACP public-evidence verification service with a bounded request schema, conforming job-result receipts, hidden offering metadata, timeout/retry behavior, and synthetic buyer/provider lifecycle fixtures.
 
 ### Security
 
