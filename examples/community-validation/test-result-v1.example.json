@@ -1,0 +1,42 @@
+{
+  "checks": [
+    {
+      "checkId": "passing-fixture",
+      "status": "pass",
+      "summary": "The published evidence fixture produced a successful pass receipt."
+    },
+    {
+      "checkId": "finding-fixture",
+      "status": "pass",
+      "summary": "A synthetic provenance mismatch produced a completed fail verdict and exit code 2."
+    },
+    {
+      "checkId": "failure-fixture",
+      "status": "pass",
+      "summary": "Bounded retry exhaustion produced a sanitized failed receipt and exit code 1."
+    },
+    {
+      "checkId": "local-execution-boundary",
+      "status": "pass",
+      "summary": "The reference flow remained local, zero-cost, and explicitly simulated."
+    }
+  ],
+  "environment": {
+    "platform": "darwin",
+    "pythonVersion": "3.11.15"
+  },
+  "errors": [],
+  "limitations": [
+    "This harness exercises synthetic local fixtures and does not prove a live ACP job, payment, settlement, or upstream endorsement.",
+    "The generated record excludes raw logs and must still receive human sensitive-data review before public submission."
+  ],
+  "recordedAt": "2026-07-15T13:00:00Z",
+  "schemaVersion": "1.0",
+  "sharing": {
+    "publicSubmissionApproved": false,
+    "reviewedForSensitiveData": false
+  },
+  "status": "passed",
+  "toolkitRevision": "4caed42",
+  "validationId": "example:community-validation:001"
+}

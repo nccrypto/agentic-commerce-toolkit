@@ -21,6 +21,8 @@ ACP_EVIDENCE_REQUEST_SCHEMA = ROOT / "schemas" / "acp-evidence-request-v1.schema
 ACP_EVIDENCE_REQUEST_EXAMPLE = ROOT / "examples" / "virtuals-acp-evidence" / "request-v1.example.json"
 ACP_EVIDENCE_RECEIPT_EXAMPLE = ROOT / "examples" / "virtuals-acp-evidence" / "receipt-v1.example.json"
 ACP_EVIDENCE_OFFERING_EXAMPLE = ROOT / "examples" / "virtuals-acp-evidence" / "offering-v1.example.json"
+COMMUNITY_VALIDATION_SCHEMA = ROOT / "schemas" / "community-validation-result-v1.schema.json"
+COMMUNITY_VALIDATION_EXAMPLE = ROOT / "examples" / "community-validation" / "test-result-v1.example.json"
 
 
 def load_json(path):
@@ -65,6 +67,34 @@ class SchemaContractTests(unittest.TestCase):
         self.assertFalse(offering["requiredFunds"])
         self.assertTrue(offering["isHidden"])
         self.assertFalse(offering["requirements"].get("additionalProperties", True))
+
+    def test_community_validation_example_conforms_and_defaults_to_no_sharing(self):
+        self.assert_conforms(COMMUNITY_VALIDATION_SCHEMA, COMMUNITY_VALIDATION_EXAMPLE)
+        result = load_json(COMMUNITY_VALIDATION_EXAMPLE)
+
+        self.assertFalse(result["sharing"]["reviewedForSensitiveData"])
+        self.assertFalse(result["sharing"]["publicSubmissionApproved"])
+
+    def test_community_validation_result_rejects_private_shaped_fields(self):
+        schema = load_json(COMMUNITY_VALIDATION_SCHEMA)
+        validator = Draft202012Validator(schema, format_checker=FormatChecker())
+        result = load_json(COMMUNITY_VALIDATION_EXAMPLE)
+        result["localPath"] = "not allowed"
+        result["environment"]["hostname"] = "not allowed"
+
+        self.assertFalse(validator.is_valid(result))
+
+    def test_community_validation_status_matches_checks_and_errors(self):
+        schema = load_json(COMMUNITY_VALIDATION_SCHEMA)
+        validator = Draft202012Validator(schema, format_checker=FormatChecker())
+
+        false_pass = load_json(COMMUNITY_VALIDATION_EXAMPLE)
+        false_pass["checks"][0]["status"] = "fail"
+        self.assertFalse(validator.is_valid(false_pass))
+
+        unexplained_failure = load_json(COMMUNITY_VALIDATION_EXAMPLE)
+        unexplained_failure["status"] = "failed"
+        self.assertFalse(validator.is_valid(unexplained_failure))
 
     def test_action_control_schema_enforces_default_deny(self):
         schema = load_json(ACTION_CONTROL_SCHEMA)

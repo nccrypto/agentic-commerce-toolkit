@@ -10,5 +10,7 @@
 - `../examples/action-control/` — synthetic dry-run and authorized-action examples validated in CI.
 - `acp-evidence-request-v1.schema.json` — bounded request envelope for the Virtuals ACP public-evidence verification job.
 - `../examples/virtuals-acp-evidence/` — synthetic request, receipt, and hidden offering examples validated in CI.
+- `community-validation-result-v1.schema.json` — bounded, public-safe result contract for external validation runs.
+- `../examples/community-validation/test-result-v1.example.json` — synthetic community-validation result validated in CI.
 
 Versioned JSON schemas for additional safety patterns will live here.
