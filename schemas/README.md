@@ -8,5 +8,7 @@
 - `../examples/agent-job-result/reppo-inspection-result-v1.example.json` — synthetic conforming agent-job result validated in CI.
 - `action-control-v1.schema.json` — default-deny dry-run and approval-control decision contract.
 - `../examples/action-control/` — synthetic dry-run and authorized-action examples validated in CI.
+- `acp-evidence-request-v1.schema.json` — bounded request envelope for the Virtuals ACP public-evidence verification job.
+- `../examples/virtuals-acp-evidence/` — synthetic request, receipt, and hidden offering examples validated in CI.
 
 Versioned JSON schemas for additional safety patterns will live here.

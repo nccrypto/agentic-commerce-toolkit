@@ -4,6 +4,7 @@
 - [Provenance schemas](provenance-schemas.md)
 - [Agent job result schema](provenance-schemas.md#agent-job-result-v1)
 - [Dry-run and approval controls](action-controls.md)
+- [Virtuals ACP public-evidence reference service](virtuals-acp-evidence-service.md)
 - [Read-only maintenance automation](automation.md)
 - [Release process](releasing.md)
 

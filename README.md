@@ -2,7 +2,7 @@
 
 Open-source tools, adapters, schemas, and operational patterns for agent-native commerce, starting with Reppo and Virtuals ACP.
 
-> **Status:** v0.1.0 — read-only Reppo ecosystem inspector.
+> **Status:** v0.1.0 released; the deterministic local Virtuals ACP reference service is currently unreleased.
 
 ## Mission
 
@@ -65,6 +65,9 @@ agentic-commerce reppo status --pretty
 agentic-commerce reppo datanets --limit 20
 agentic-commerce reppo pods --limit 20
 agentic-commerce reppo snapshot --limit 10 --pretty
+agentic-commerce virtuals-acp verify-evidence \
+  --request examples/virtuals-acp-evidence/request-v1.example.json \
+  --pretty
 ```
 
 Runtime code uses only Python's standard library. Install the development-only schema and build tools before running the complete verification suite:
@@ -82,6 +85,8 @@ See [docs/reppo-inspector.md](docs/reppo-inspector.md) for the JSON contract, ca
 For portable public-source provenance records and bounded structured job results, see [docs/provenance-schemas.md](docs/provenance-schemas.md), `schemas/source-manifest-v1.schema.json`, and `schemas/agent-job-result-v1.schema.json`.
 
 For deterministic dry-run and default-deny approval decisions, see [docs/action-controls.md](docs/action-controls.md), `schemas/action-control-v1.schema.json`, and `agentic_commerce.action_control`. The evaluator authorizes or rejects bounded actions but never executes them.
+
+For the selected Phase 3 Virtuals ACP job, see [docs/virtuals-acp-evidence-service.md](docs/virtuals-acp-evidence-service.md), `schemas/acp-evidence-request-v1.schema.json`, and `agentic_commerce.acp_evidence`. Local mode simulates a buyer/provider evidence-verification lifecycle, emits a conforming job-result receipt, and performs no wallet, payment, signing, inference, or network operation.
 
 For silent compatibility drift detection and bounded weekly project evidence, see [docs/automation.md](docs/automation.md). These helpers are read-only and never perform GitHub mutations.
 
