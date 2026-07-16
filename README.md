@@ -88,6 +88,8 @@ For deterministic dry-run and default-deny approval decisions, see [docs/action-
 
 For the selected Phase 3 Virtuals ACP job, see [docs/virtuals-acp-evidence-service.md](docs/virtuals-acp-evidence-service.md), `schemas/acp-evidence-request-v1.schema.json`, and `agentic_commerce.acp_evidence`. Local mode simulates a buyer/provider evidence-verification lifecycle, emits a conforming job-result receipt, and performs no wallet, payment, signing, inference, or network operation.
 
+For network-free external testing, public-safe result records, and draft upstream review questions, see [docs/community-validation.md](docs/community-validation.md), [docs/upstream-review-requests.md](docs/upstream-review-requests.md), and `scripts/run_community_validation.py`. Generated validation records are not uploaded automatically and default to no public-sharing approval.
+
 For silent compatibility drift detection and bounded weekly project evidence, see [docs/automation.md](docs/automation.md). These helpers are read-only and never perform GitHub mutations.
 
 At the 2026-07-11 compatibility check, the datanet and pod catalogs were live. The documented public stats route returned HTTP 404, so `status` and `snapshot` correctly returned partial result code `2` while preserving catalog data. The upstream pods route also ignored its requested page size; the client applies the requested limit after a capped download.
