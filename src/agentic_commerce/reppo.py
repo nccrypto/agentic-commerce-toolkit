@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
-import json
 import math
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from http.client import HTTPException
 from typing import Any, Callable, Protocol
 from urllib.error import HTTPError
 from urllib.parse import urlencode
 from urllib.request import HTTPRedirectHandler, Request, build_opener
+
+from .json_utils import strict_json_loads
 
 
 DEFAULT_BASE_URL = "https://reppo.ai/api/v1"
@@ -151,7 +153,7 @@ class Inspector:
     ) -> tuple[Any, dict[str, Any], dict[str, str] | None]:
         try:
             response = self.transport.get(url, timeout=self.timeout)
-        except (ResponseTooLarge, TimeoutError, OSError) as exception:
+        except (ResponseTooLarge, TimeoutError, OSError, HTTPException) as exception:
             if isinstance(exception, ResponseTooLarge):
                 code = "RESPONSE_TOO_LARGE"
                 message = "Public endpoint response exceeded the size limit"
@@ -188,8 +190,8 @@ class Inspector:
             source["error"] = error
             return None, source, error
         try:
-            data = json.loads(response.body)
-        except (json.JSONDecodeError, UnicodeDecodeError):
+            data = strict_json_loads(response.body)
+        except (ValueError, UnicodeError, RecursionError):
             error = {
                 "code": "INVALID_JSON",
                 "message": "Public endpoint returned invalid JSON",

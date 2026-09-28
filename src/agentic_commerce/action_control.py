@@ -80,7 +80,7 @@ def _validate_request(request: Mapping[str, Any]) -> dict[str, Any]:
         raise ValueError("actionId must be a stable public identifier")
     if not isinstance(action_type, str) or not _ACTION_TYPE.fullmatch(action_type):
         raise ValueError("actionType must be a bounded public action type")
-    if mode not in {"dry-run", "execute"}:
+    if not isinstance(mode, str) or mode not in {"dry-run", "execute"}:
         raise ValueError("mode must be dry-run or execute")
     if not isinstance(summary, str) or not 1 <= len(summary) <= 500:
         raise ValueError("summary must contain between 1 and 500 characters")
@@ -104,6 +104,7 @@ def _validate_request(request: Mapping[str, Any]) -> dict[str, Any]:
                 raise ValueError("parameter arrays must contain at most 100 values")
             for item in value:
                 _validate_scalar(item)
+            value = list(value)
         else:
             _validate_scalar(value)
         normalized_parameters.append({"name": name, "value": value})
@@ -150,9 +151,9 @@ def _validate_approval(approval: Mapping[str, Any]) -> dict[str, Any]:
         raise ValueError("approval actionType must be bounded")
     if not isinstance(approval["actionDigest"], str) or not _DIGEST.fullmatch(approval["actionDigest"]):
         raise ValueError("approval actionDigest must be a SHA-256 digest")
-    if approval["decision"] not in {"approved", "rejected"}:
+    if not isinstance(approval["decision"], str) or approval["decision"] not in {"approved", "rejected"}:
         raise ValueError("approval decision must be approved or rejected")
-    if approval["issuerType"] not in {"human", "policy"}:
+    if not isinstance(approval["issuerType"], str) or approval["issuerType"] not in {"human", "policy"}:
         raise ValueError("issuerType must be human or policy")
     _parse_datetime(approval["issuedAt"], "approval.issuedAt")
     _parse_datetime(approval["expiresAt"], "approval.expiresAt")
