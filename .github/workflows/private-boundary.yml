@@ -30,4 +30,4 @@ jobs:
           PUBLIC_BOUNDARY_PRIVATE_TERMS: ${{ secrets.PUBLIC_BOUNDARY_PRIVATE_TERMS }}
         run: |
           test -n "$PUBLIC_BOUNDARY_PRIVATE_TERMS"
-          python3 trusted/scripts/check_public_boundary.py candidate
+          python3 trusted/scripts/check_public_boundary.py --all-files candidate
