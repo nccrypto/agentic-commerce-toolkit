@@ -9,6 +9,7 @@ import math
 import os
 import sys
 import tempfile
+from http.client import HTTPException
 from pathlib import Path
 from typing import Any, Callable
 from urllib.parse import urlsplit
@@ -21,6 +22,7 @@ if not (REPO_ROOT / "src" / "agentic_commerce").is_dir():
     REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
+from agentic_commerce.json_utils import strict_json_loads  # noqa: E402
 from agentic_commerce.reppo import (  # noqa: E402
     DEFAULT_BASE_URL,
     DEFAULT_MAX_RESPONSE_BYTES,
@@ -106,7 +108,7 @@ def probe(
     except TimeoutError:
         observation["errorCode"] = "TIMEOUT"
         return observation
-    except OSError:
+    except (OSError, HTTPException):
         observation["errorCode"] = "NETWORK_ERROR"
         return observation
 
@@ -119,8 +121,8 @@ def probe(
         return observation
 
     try:
-        payload = json.loads(response.body)
-    except (UnicodeDecodeError, json.JSONDecodeError):
+        payload = strict_json_loads(response.body)
+    except (ValueError, UnicodeError, RecursionError):
         observation["shape"] = "invalid-json"
         observation["errorCode"] = "INVALID_JSON"
         return observation

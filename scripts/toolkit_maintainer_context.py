@@ -81,6 +81,8 @@ def safe_environment(*, repo: Path, python: bool = False) -> dict[str, str]:
         if key in SAFE_ENVIRONMENT_KEYS
     }
     if python:
+        for key in ("GH_CONFIG_DIR", "XDG_CONFIG_HOME"):
+            environment.pop(key, None)
         environment["HOME"] = "/nonexistent"
         environment["PYTHONDONTWRITEBYTECODE"] = "1"
         environment["PYTHONPATH"] = str(repo / "src")

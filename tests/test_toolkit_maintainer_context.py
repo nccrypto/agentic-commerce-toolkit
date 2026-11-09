@@ -51,6 +51,8 @@ class MaintainerContextTests(unittest.TestCase):
             {
                 "GH_TOKEN": "synthetic-readonly-token",
                 "SYNTHETIC_SECRET": "must-not-inherit",
+                "GH_CONFIG_DIR": "/synthetic/gh-config",
+                "XDG_CONFIG_HOME": "/synthetic/xdg-config",
             },
         ):
             context = module.collect_context(
@@ -79,7 +81,13 @@ class MaintainerContextTests(unittest.TestCase):
         for call in runner.calls[4:]:
             environment = call["env"]
             self.assertEqual(environment.get("GH_TOKEN"), "synthetic-readonly-token")
+            self.assertEqual(environment.get("GH_CONFIG_DIR"), "/synthetic/gh-config")
+            self.assertEqual(environment.get("XDG_CONFIG_HOME"), "/synthetic/xdg-config")
             self.assertNotIn("SYNTHETIC_SECRET", environment)
+        for call in runner.calls[2:4]:
+            self.assertNotIn("GH_CONFIG_DIR", call["env"])
+            self.assertNotIn("XDG_CONFIG_HOME", call["env"])
+            self.assertEqual(call["env"]["HOME"], "/nonexistent")
         tests_call = runner.calls[2]
         self.assertEqual(tests_call["env"]["PYTHONDONTWRITEBYTECODE"], "1")
         self.assertNotEqual(tests_call["cwd"].resolve(), ROOT.resolve())

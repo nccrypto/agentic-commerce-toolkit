@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Callable, Sequence, TextIO
 
 from .acp_evidence import receipt_exit_code, run_local_evidence_job
+from .json_utils import strict_json_loads
 from .reppo import DEFAULT_BASE_URL, Inspector, Transport, UrllibTransport, utc_now
 
 
@@ -63,7 +64,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _print_json(value: Any, *, pretty: bool, output: TextIO) -> None:
-    dump_options: dict[str, Any] = {"sort_keys": True}
+    dump_options: dict[str, Any] = {"sort_keys": True, "allow_nan": False}
     if pretty:
         dump_options["indent"] = 2
     else:
@@ -84,9 +85,11 @@ def main(
     if args.ecosystem == "virtuals-acp":
         try:
             request_path = Path(args.request)
-            if request_path.stat().st_size > 1_000_000:
+            with request_path.open("rb") as request_file:
+                request_bytes = request_file.read(1_000_001)
+            if len(request_bytes) > 1_000_000:
                 raise ValueError("oversized input")
-            request = json.loads(request_path.read_text(encoding="utf-8"))
+            request = strict_json_loads(request_bytes.decode("utf-8"))
             receipt = run_local_evidence_job(
                 request,
                 timeout_ms=args.timeout_ms,
@@ -94,7 +97,7 @@ def main(
                 clock=clock,
                 monotonic=monotonic,
             )
-        except (OSError, UnicodeError, json.JSONDecodeError, ValueError):
+        except (OSError, UnicodeError, ValueError, RecursionError):
             _print_json(
                 {
                     "error": {

@@ -38,6 +38,8 @@ The inspector validates the documented `data.subnets` and `data.pods` arrays. Be
 
 The inspector has no authentication support and does not call account, wallet, transaction, or other protected routes. Tests use only synthetic fixtures and never call the live service.
 
+Malformed HTTP framing returns `NETWORK_ERROR`. Invalid JSON, oversized integer literals rejected by Python, non-finite numbers (including exponent overflow), and nesting beyond 100 containers return `INVALID_JSON`. Aggregate commands retain other successful sources for these failures; the watchdog uses the same decoding policy.
+
 ## Current upstream compatibility
 
 Live verification on 2026-07-11 produced:
