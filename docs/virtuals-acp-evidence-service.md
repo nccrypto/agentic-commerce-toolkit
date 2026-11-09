@@ -126,6 +126,13 @@ The provider checks:
 - referenced source IDs exist in the manifest;
 - source and manifest locations are public HTTPS URLs without user info, private IP literals, local hostnames, or non-HTTPS ports.
 
+Location checks are lexical and never resolve DNS. IP literals must use canonical
+notation and be globally routable; shortened, octal, and hexadecimal IPv4 aliases
+are rejected. DNS names must use bounded ASCII labels (IDNs may use punycode),
+with no numeric or hexadecimal final label. A DNS name passing this check does
+not prove that it resolves to a public address. Findings identify fixed contract
+paths without echoing unknown field names or invalid or missing source IDs.
+
 A pass does **not** prove:
 
 - that a publisher's claims are true;

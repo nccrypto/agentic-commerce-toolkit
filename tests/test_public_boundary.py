@@ -1,4 +1,6 @@
 import importlib.util
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -12,6 +14,86 @@ SPEC.loader.exec_module(boundary)
 
 
 class PublicBoundaryTests(unittest.TestCase):
+    def init_repository(self, root):
+        subprocess.run(["git", "init", "-q", str(root)], check=True)
+
+    def test_tracked_files_in_skipped_directories_are_scanned(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.init_repository(root)
+            directories = sorted(boundary.SKIP_DIRS - {".git"})
+            (root / ".gitignore").write_text("\n".join(directories) + "\n")
+            for directory in directories:
+                target = root / directory / "auth.json"
+                target.parent.mkdir()
+                target.write_text("internal-example\n", encoding="utf-8")
+                subprocess.run(["git", "-C", str(root), "add", "-f", "--", str(target)], check=True)
+            with patch.dict("os.environ", {"PUBLIC_BOUNDARY_PRIVATE_TERMS": "internal-example"}):
+                findings = boundary.scan(root)
+            for directory in directories:
+                self.assertIn(f"{directory}/auth.json: forbidden filename", findings)
+                self.assertIn(f"{directory}/auth.json:1: configured private identifier", findings)
+                if directory.startswith("."):
+                    self.assertIn(f"{directory}/auth.json: forbidden hidden or private directory", findings)
+
+    def test_all_files_mode_does_not_invoke_git(self):
+        # Git metadata must not be needed in strict candidate mode.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / ".git").mkdir()
+            target = root / "node_modules" / "auth.json"
+            target.parent.mkdir()
+            target.write_text("{}\n")
+            with patch.object(boundary.subprocess, "run", side_effect=AssertionError("unexpected Git")):
+                self.assertIn("node_modules/auth.json: forbidden filename", boundary.scan(root, all_files=True))
+
+    def test_git_enumeration_failure_does_not_pass(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / ".git").mkdir()
+            with patch.object(boundary.subprocess, "run", side_effect=FileNotFoundError):
+                with self.assertRaisesRegex(RuntimeError, "cannot enumerate tracked files"):
+                    boundary.scan(root)
+
+    def test_untracked_local_venv_is_skipped_in_checkout(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.init_repository(root)
+            target = root / ".venv" / "auth.json"
+            target.parent.mkdir()
+            target.write_text("{}\n")
+            self.assertEqual(boundary.scan(root), [])
+
+    def test_export_without_git_scans_skipped_directories(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for directory in boundary.SKIP_DIRS - {".git"}:
+                target = root / directory / "auth.json"
+                target.parent.mkdir()
+                target.write_text("{}\n")
+                self.assertIn(f"{directory}/auth.json: forbidden filename", boundary.scan(root))
+
+    def test_scan_root_under_skipped_ancestor_is_not_skipped(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "node_modules" / "export"
+            root.mkdir(parents=True)
+            (root / "auth.json").write_text("{}\n")
+            self.assertIn("auth.json: forbidden filename", boundary.scan(root))
+
+    def test_all_files_cli_scans_untracked_candidate_files(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.init_repository(root)
+            target = root / "node_modules" / "auth.json"
+            target.parent.mkdir()
+            target.write_text("{}\n")
+            result = subprocess.run(
+                [sys.executable, "-B", str(MODULE_PATH), "--all-files", str(root)],
+                capture_output=True, text=True, check=False,
+            )
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("node_modules/auth.json: forbidden filename", result.stdout)
+
     def test_clean_tree_passes(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -149,6 +231,7 @@ class PublicBoundaryTests(unittest.TestCase):
             with self.subTest(directory=directory), tempfile.TemporaryDirectory() as tmp:
                 root = Path(tmp)
                 editor_file = root / directory / "settings.json"
+                self.init_repository(root)
                 editor_file.parent.mkdir()
                 editor_file.write_text("{}\n", encoding="utf-8")
                 self.assertEqual(boundary.scan(root), [])

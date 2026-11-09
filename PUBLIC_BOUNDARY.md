@@ -39,4 +39,8 @@ When an internal need inspires a public contribution:
 
 ## Enforcement
 
+At a Git checkout root, local tooling directories such as `.venv`, `node_modules`, `.idea`, and `.vscode` are skipped only for untracked files. Indexed files in those directories still receive filename, directory, and content checks. Failure to enumerate the index fails the scan rather than silently excluding tracked files. The checker reads working-tree contents, not historical commits or staged blob contents.
+
+Trees without Git metadata (including extracted source distributions) are scanned without tooling exclusions. Use `--all-files` for candidate trees or exports even if they contain Git metadata: this mode performs no Git commands and exempts only `.git` metadata. Trusted pre-merge CI uses this mode, so candidate files cannot evade checks through tooling-directory names. Exclusion decisions are relative to the scan root, not its ancestors.
+
 The boundary checker blocks known secret filenames, unapproved hidden or private directories, explicit named non-public system references, sensitive key patterns, and local absolute paths. Maintainers can supply an uncommitted comma-separated identifier denylist through `PUBLIC_BOUNDARY_PRIVATE_TERMS`; findings do not echo those values. Trusted pre-merge and push CI supply this denylist from a GitHub secret, while pull-request code never receives or executes with it. The checker can produce false positives and cannot prove that content is safe. Human review remains mandatory.

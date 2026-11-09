@@ -70,7 +70,7 @@ def _canonical_size(value: Any) -> int:
                 sort_keys=True,
             ).encode("utf-8")
         )
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, RecursionError, UnicodeError):
         return _MAX_REQUEST_BYTES + 1
 
 
@@ -100,11 +100,11 @@ def _exact_keys(
         return False
     keys = set(value)
     missing = sorted(required - keys)
-    extra = sorted(keys - required - optional)
+    extra = keys - required - optional
     if missing:
         findings.append(f"{path} is missing required fields: {', '.join(missing)}.")
     if extra:
-        findings.append(f"{path} contains undeclared fields: {', '.join(extra)}.")
+        findings.append(f"{path} contains undeclared fields.")
     return not missing and not extra
 
 
@@ -155,7 +155,10 @@ def _public_value(value: Any, depth: int = 0) -> bool:
 
 
 def _public_https_url(value: Any) -> bool:
-    if not isinstance(value, str) or len(value) > 1000:
+    if not isinstance(value, str) or len(value) > 1000 or any(
+        character.isspace() or ord(character) < 32 or ord(character) == 127
+        for character in value
+    ):
         return False
     try:
         parsed = urlsplit(value)
@@ -163,17 +166,27 @@ def _public_https_url(value: Any) -> bool:
         port = parsed.port
     except ValueError:
         return False
-    if parsed.scheme != "https" or not host or parsed.username or parsed.password:
+    if parsed.scheme != "https" or not host or parsed.username is not None or parsed.password is not None:
         return False
     if port not in (None, 443):
         return False
-    lowered = host.rstrip(".").lower()
+    lowered = host.removesuffix(".").lower()
+    if "%" in lowered or "\\" in lowered:
+        return False
     if lowered == "localhost" or lowered.endswith((".localhost", ".local", ".internal")):
         return False
     try:
         address = ipaddress.ip_address(lowered.strip("[]"))
     except ValueError:
-        return "." in lowered and not lowered.startswith(".") and not lowered.endswith(".")
+        # Never resolve DNS. Refuse legacy IPv4 forms rather than letting
+        # another URL consumer reinterpret decimal, octal, or hex aliases.
+        labels = lowered.split(".")
+        if re.fullmatch(r"(?:[0-9]+|0x[0-9a-f]+)", labels[-1]):
+            return False
+        return len(lowered) <= 253 and len(labels) >= 2 and all(
+            re.fullmatch(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?", label)
+            for label in labels
+        )
     return address.is_global
 
 
@@ -204,7 +217,7 @@ def _validate_usage(value: Any, path: str, findings: list[str]) -> None:
         findings,
     ):
         return
-    if value["purpose"] not in _PURPOSES:
+    if not isinstance(value["purpose"], str) or value["purpose"] not in _PURPOSES:
         findings.append(f"{path}.purpose is not an allowed value.")
     _string_array(
         value["derivedFacts"],
@@ -285,7 +298,7 @@ def validate_source_manifest(value: Any) -> list[str]:
                 findings.append(f"{path}.title is invalid.")
             if not _uri(source["url"]):
                 findings.append(f"{path}.url is invalid.")
-            if source["sourceType"] not in _SOURCE_TYPES:
+            if not isinstance(source["sourceType"], str) or source["sourceType"] not in _SOURCE_TYPES:
                 findings.append(f"{path}.sourceType is not allowed.")
             if not _text(source["publisher"], 1, 160):
                 findings.append(f"{path}.publisher is invalid.")
@@ -356,7 +369,7 @@ def validate_agent_job_result(value: Any) -> list[str]:
     if not isinstance(value["jobType"], str) or not _KIND.fullmatch(value["jobType"]):
         findings.append("jobResult.jobType is invalid.")
     status = value["status"]
-    if status not in {"succeeded", "partial", "failed"}:
+    if not isinstance(status, str) or status not in {"succeeded", "partial", "failed"}:
         findings.append("jobResult.status is not allowed.")
     started = _parse_datetime(value["startedAt"])
     completed = _parse_datetime(value["completedAt"])
@@ -430,7 +443,7 @@ def validate_agent_job_result(value: Any) -> list[str]:
                 findings.append("jobResult.cost.amount is invalid.")
             if not isinstance(cost["currency"], str) or not re.fullmatch(r"[A-Z][A-Z0-9]{2,11}", cost["currency"]):
                 findings.append("jobResult.cost.currency is invalid.")
-            if cost["basis"] not in {"measured", "estimated"}:
+            if not isinstance(cost["basis"], str) or cost["basis"] not in {"measured", "estimated"}:
                 findings.append("jobResult.cost.basis is invalid.")
     if "timeout" in value:
         timeout = value["timeout"]
@@ -447,9 +460,9 @@ def validate_agent_job_result(value: Any) -> list[str]:
             if _parse_datetime(freshness["evaluatedAt"]) is None:
                 findings.append("jobResult.freshness.evaluatedAt is invalid.")
             fresh_status = freshness["status"]
-            if fresh_status not in {"fresh", "stale", "unknown"}:
+            if not isinstance(fresh_status, str) or fresh_status not in {"fresh", "stale", "unknown"}:
                 findings.append("jobResult.freshness.status is invalid.")
-            if fresh_status in {"fresh", "stale"} and not {"dataAsOf", "maxAgeSeconds"} <= set(freshness):
+            if isinstance(fresh_status, str) and fresh_status in {"fresh", "stale"} and not {"dataAsOf", "maxAgeSeconds"} <= set(freshness):
                 findings.append("jobResult.freshness needs dataAsOf and maxAgeSeconds when freshness is known.")
             if "dataAsOf" in freshness and _parse_datetime(freshness["dataAsOf"]) is None:
                 findings.append("jobResult.freshness.dataAsOf is invalid.")
@@ -515,24 +528,29 @@ def _verify_bundle(request: Mapping[str, Any]) -> tuple[list[dict[str, Any]], li
         else:
             if provenance.get("manifestId") != manifest_id:
                 linkage.append("jobResult.provenance.manifestId does not match sourceManifest.manifestId.")
+            manifest_sources = manifest.get("sources")
+            if not isinstance(manifest_sources, list):
+                linkage.append("sourceManifest.sources is unavailable for linkage checking.")
+                manifest_sources = []
             manifest_source_ids = {
                 source.get("sourceId")
-                for source in manifest.get("sources", [])
+                for source in manifest_sources[:100]
                 if _is_mapping(source) and isinstance(source.get("sourceId"), str)
+                and _SOURCE_ID.fullmatch(source["sourceId"])
             }
             referenced = provenance.get("sourceIds", [])
             if isinstance(referenced, list):
-                missing = sorted(
-                    source_id
-                    for source_id in referenced
-                    if isinstance(source_id, str) and source_id not in manifest_source_ids
-                )
-                if missing:
+                if any(
+                    not isinstance(source_id, str)
+                    or not _SOURCE_ID.fullmatch(source_id)
+                    or source_id not in manifest_source_ids
+                    for source_id in referenced[:100]
+                ):
                     linkage.append(
-                        "jobResult.provenance.sourceIds contains IDs absent from the manifest: "
-                        + ", ".join(missing[:10])
-                        + "."
+                        "jobResult.provenance.sourceIds contains invalid IDs or IDs absent from the manifest."
                     )
+            else:
+                linkage.append("jobResult.provenance.sourceIds is unavailable for linkage checking.")
     else:
         linkage.append("Evidence documents are unavailable for linkage checking.")
 

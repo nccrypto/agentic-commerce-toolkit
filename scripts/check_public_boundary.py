@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -50,18 +51,37 @@ def configured_private_patterns() -> tuple[re.Pattern[str], ...]:
     )
 
 
-def iter_files(root: Path):
-    for path in root.rglob("*"):
-        if any(part in SKIP_DIRS for part in path.parts):
-            continue
-        if path.is_file():
+def iter_files(root: Path, *, all_files: bool = False):
+    # Only a checkout root may exempt local tooling directories. Exports and
+    # subdirectory scans have no authoritative index and scan everything.
+    tracked: set[Path] = set()
+    checkout = (root / ".git").exists()
+    if checkout and not all_files:
+        environment = {key: value for key, value in os.environ.items()
+                       if not key.startswith("GIT_")}
+        try:
+            result = subprocess.run(
+                ["git", "--no-optional-locks", "-C", str(root),
+                 "ls-files", "--cached", "-z", "--", "."],
+                env=environment, capture_output=True, check=True, timeout=30,
+            )
+        except (OSError, subprocess.SubprocessError) as exc:
+            raise RuntimeError("cannot enumerate tracked files; use --all-files") from exc
+        tracked = {root / os.fsdecode(name) for name in result.stdout.split(b"\0") if name}
+    skipped = SKIP_DIRS if checkout and not all_files else {".git"}
+    candidates = set(tracked)
+    for directory, directories, filenames in os.walk(root, followlinks=False):
+        directories[:] = [name for name in directories if name not in skipped]
+        candidates.update(Path(directory) / name for name in filenames if name != ".git")
+    for path in sorted(candidates):
+        if ".git" not in path.relative_to(root).parts and path.is_file():
             yield path
 
 
-def scan(root: Path) -> list[str]:
+def scan(root: Path, *, all_files: bool = False) -> list[str]:
     findings: list[str] = []
     private_patterns = configured_private_patterns()
-    for path in iter_files(root):
+    for path in iter_files(root, all_files=all_files):
         rel = path.relative_to(root)
         if path.name in FORBIDDEN_FILENAMES or path.name.startswith(".env."):
             if path.name != ".env.example":
@@ -94,9 +114,17 @@ def scan(root: Path) -> list[str]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("root", nargs="?", default=".")
+    parser.add_argument(
+        "--all-files", action="store_true",
+        help="scan exports/candidates without local tooling exclusions or Git commands",
+    )
     args = parser.parse_args()
     root = Path(args.root).resolve()
-    findings = scan(root)
+    try:
+        findings = scan(root, all_files=args.all_files)
+    except RuntimeError as exc:
+        print(f"Public-boundary check FAILED: {exc}", file=sys.stderr)
+        return 1
     if findings:
         print("Public-boundary check FAILED:")
         for finding in findings:

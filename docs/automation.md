@@ -46,4 +46,8 @@ Before collection, the script verifies the expected public remote and required t
 python3 scripts/toolkit_maintainer_context.py --repo .
 ```
 
+Python checks also remove `GH_CONFIG_DIR` and `XDG_CONFIG_HOME`, preventing inherited credential-directory pointers from bypassing the overridden `HOME`. The fixed GitHub CLI calls retain these configuration pointers for normal read-only authentication.
+
+This environment filtering and disposable test copy are hygiene measures, not a sandbox. Python checks execute repository code with the maintainer's operating-system permissions; that code could still read accessible files, access the network, or modify files outside the copy. Run only reviewed, trusted code locally; use a separately isolated environment for untrusted contributions.
+
 The script only collects evidence. Any issue, patch, commit, push, pull request, release, merge, or repository-setting change requires separate human approval.

@@ -91,7 +91,7 @@
       "properties": {
         "amount": {
           "type": "string",
-          "pattern": "^(0|[1-9][0-9]{0,17})(\\.[0-9]{1,18})?$",
+          "pattern": "^(0|[1-9][0-9]{0,17})([.][0-9]{1,18})?$",
           "description": "Non-negative decimal cost encoded as a string to avoid floating-point ambiguity."
         },
         "currency": {
