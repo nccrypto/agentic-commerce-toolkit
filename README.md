@@ -4,6 +4,24 @@ Open-source tools, adapters, schemas, and operational patterns for agent-native 
 
 > **Status:** v0.1.0 released; the deterministic local Virtuals ACP reference service is currently unreleased.
 
+## Can a reviewer trace an agent’s result to its sources?
+
+An agent returns a catalog report with a list of sources. Before accepting the report, a buyer needs to know whether it cites the same records the agent supplied. The local Python verifier checks the report and source list together and returns a receipt a reviewer can inspect.
+
+| Example | What the reviewer learns | Verifier exit code |
+| --- | --- | --- |
+| The supplied report references the correct source list | The documents pass the format, linkage, and source-location checks. The underlying claims still require review. | `0` |
+| One identifier points to a different source list | Verification finishes and identifies the mismatched reference. The buyer can request corrected evidence. | `2` |
+| The verifier exhausts its retries | The buyer receives a service error and has no verdict on the report. | `1` |
+
+Run all three cases from a checkout with Python 3.11 or newer. The demo uses synthetic records, runs offline, and writes its results to the terminal.
+
+```bash
+python3 scripts/run_community_validation.py --validation-id demo:source-review --revision "$(git rev-parse --short HEAD)" --pretty
+```
+
+The demo prints `"status": "passed"` when each case behaves as expected and the local execution check passes. To follow one case by hand, compare the report’s `provenance.manifestId` with the source list’s `manifestId`, then look for `provenance-linkage` in the receipt. [Sample request](examples/virtuals-acp-evidence/request-v1.example.json) · [Sample receipt](examples/virtuals-acp-evidence/receipt-v1.example.json)
+
 ## Mission
 
 Make it easier for developers and AI agents to discover, evaluate, integrate, and safely operate agentic-commerce protocols.
